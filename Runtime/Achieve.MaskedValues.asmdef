@@ -1,0 +1,10 @@
+{
+  "name": "Achieve.MaskedValues",
+  "rootNamespace": "Achieve.MaskedValues",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "autoReferenced": true,
+  "noEngineReferences": true
+}

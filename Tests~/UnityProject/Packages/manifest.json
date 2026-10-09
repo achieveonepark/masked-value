@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "com.achieve.masked-values": "file:../../..",
+    "com.unity.modules.jsonserialize": "1.0.0"
+  }
+}

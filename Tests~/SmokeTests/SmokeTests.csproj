@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../Runtime/*.cs" />
+    <Compile Include="../../Samples~/ClassFields/PlayerProfileCodec.cs" />
+    <Compile Include="../Verification/VerificationSuite.cs" />
+    <Compile Include="Program.cs" />
+  </ItemGroup>
+</Project>

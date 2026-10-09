@@ -1,0 +1,6 @@
+interface:
+  display_name: "Achieve Masked Values"
+  short_description: "Unity 런타임 값 은닉과 경량 무결성 검사 구현·연동"
+  default_prompt: "Use $achieve-masked-values to implement or integrate masked game state, guarded values, or explicit span codecs."
+policy:
+  allow_implicit_invocation: true

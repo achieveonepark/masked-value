@@ -1,0 +1,6 @@
+{
+  "name": "Achieve.MaskedValues.Verification",
+  "references": ["Achieve.MaskedValues"],
+  "includePlatforms": ["Editor"],
+  "allowUnsafeCode": true
+}

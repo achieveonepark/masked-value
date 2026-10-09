@@ -1,0 +1,15 @@
+{
+  "name": "com.achieve.masked-values",
+  "version": "0.2.0",
+  "displayName": "Masked Values",
+  "description": "Low-allocation runtime value masking and optional lightweight tamper detection for Unity. Not cryptographic encryption or authentication.",
+  "unity": "2022.3",
+  "keywords": ["memory", "masking", "values", "performance", "integrity"],
+  "samples": [
+    {
+      "displayName": "Class Fields",
+      "description": "Guarded health with periodic remasking, masked primitives and structs, strings and an explicit codec.",
+      "path": "Samples~/ClassFields"
+    }
+  ]
+}
