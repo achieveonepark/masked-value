@@ -40,4 +40,4 @@ public sealed class PlayerState : MonoBehaviour
 
 ## AI 스킬
 
-저장소에 Codex용 [`achieve-masked-values`](.agents/skills/achieve-masked-values/SKILL.md)와 Claude Code용 [동일 스킬](.claude/skills/achieve-masked-values/SKILL.md)이 포함되어 있습니다. 직접 호출: Codex `$achieve-masked-values`, Claude Code `/achieve-masked-values`.
+스킬 원본은 [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md)에 있습니다. Unity Skill Manager가 프로젝트의 `.agents/skills`와 `.claude/skills`에 취합합니다. 직접 호출: Codex `$achieve-masked-values`, Claude Code `/achieve-masked-values`.
