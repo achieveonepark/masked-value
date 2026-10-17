@@ -26,6 +26,9 @@ jobs:
         run: |
           $releaseTag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { '' }
           & './Tools~/validate-package.ps1' -Tag $releaseTag
+      - name: Verify Codex and Claude skill copies
+        shell: pwsh
+        run: "& './Tools~/sync-skills.ps1' -Check"
       - name: Run behavior and allocation verification
         run: dotnet run --project 'Tests~/SmokeTests/SmokeTests.csproj' --configuration Release
       - name: Pack distribution

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Achieve Masked Values"
+  short_description: "Unity 값 은닉·Inspector·변조 감지 후 게임 종료 연동"
+  default_prompt: "Use $achieve-masked-values to integrate masked game state and a tamper listener that stops gameplay and requests shutdown on detection."
+policy:
+  allow_implicit_invocation: true

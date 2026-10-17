@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 - 2026-10-17
+
+- Document the existing tamper event's detection timing, type-only payload, threading, repeated notifications, and integrity/serialization limits.
+- Add a Unity shutdown listener guide: stop normal gameplay on detection, signal from any checking thread, and request shutdown once on the main thread; stop Play mode in the Editor.
+- Update the integration skill with shutdown-on-detection policy, failure handling, lifecycle, platform constraints, and isolated verification guidance.
+- Add matching Codex and Claude skills under `.agents/skills` and `.claude/skills`, with a sync script and CI consistency check. Distributed packages keep the canonical `Skills~` source.
+- Runtime APIs and value-access implementations are unchanged. Shutdown remains an explicit game integration policy.
+
 ## 1.0.0 - 2026-10-17
 
 - Unity 6: declare `GuardedValue<T>`, `MaskedValue<T>`, `MaskedString`, and codec-backed `MaskedData<T>` directly in the Inspector. No companion field, linking attribute, or initialization method is required.

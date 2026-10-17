@@ -11,7 +11,7 @@ Low-allocation runtime value masking and optional lightweight tamper detection f
 In **Window > Package Manager**, choose **+ > Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.0.0
+https://github.com/achieveonepark/masked-value.git#v1.0.1
 ```
 
 ### OpenUPM
@@ -34,7 +34,7 @@ Alternatively, add the following scoped registry and dependency to your project'
     }
   ],
   "dependencies": {
-    "com.achieve.masked-values": "1.0.0"
+    "com.achieve.masked-values": "1.0.1"
   }
 }
 ```
@@ -64,6 +64,12 @@ public sealed class PlayerState : MonoBehaviour
 For guarded values, `TryGetValue`, `TrySetValue`, `CheckIntegrity`, and `TryRefreshMask` return `false` when validation fails. The `Value` getter/setter and `RefreshMask` throw `InvalidOperationException` on failed checks. Call `RefreshMask()` explicitly to change the masked representation while keeping the value.
 
 Import **Class Fields** from the package's **Samples** tab in Package Manager for a complete example.
+
+## Tamper events
+
+Subscribe to `GuardedValueDiagnostics.TamperingDetected` for a notification when a guarded integrity check fails. It reports the value type, runs synchronously on the checking thread, and fires on each failed check. It detects corruption on the next checked access or explicit `CheckIntegrity()`, rather than intercepting the external memory write itself.
+
+The project integration policy is to stop normal gameplay and request shutdown on detection. The package does not quit automatically. Signal a thread-safe flag in the listener, then request player shutdown once on the main thread; in the Editor, stop Play mode instead of closing Unity. Failed `Try` operations must stop the current action. See the [tamper event and shutdown guide](Documentation~/Tampering.md) for the complete listener, lifecycle, polling, serialization exposure, and platform limits.
 
 ## Inspector support
 
@@ -106,7 +112,7 @@ See the [detailed usage guide (Korean)](Documentation~/masked-values.md) and [pe
 
 ## AI skill
 
-The package includes [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md). Unity Skill Manager collects it into the project's `.agents/skills` and `.claude/skills`. Invoke it with `$achieve-masked-values` in Codex or `/achieve-masked-values` in Claude Code.
+The package includes [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md). Unity Skill Manager collects it into consuming projects. This repository also includes matching copies in [`.agents/skills/achieve-masked-values`](https://github.com/achieveonepark/masked-value/blob/main/.agents/skills/achieve-masked-values/SKILL.md) and [`.claude/skills/achieve-masked-values`](https://github.com/achieveonepark/masked-value/blob/main/.claude/skills/achieve-masked-values/SKILL.md). Invoke `$achieve-masked-values` in Codex or `/achieve-masked-values` in Claude Code. It covers serialization/plaintext limits, event timing/threading, and game shutdown on detected tampering. Edit the `Skills~` source and run `Tools~/sync-skills.ps1` to update both local copies.
 
 ## Development
 
@@ -119,7 +125,7 @@ dotnet run --project 'Tests~/SmokeTests/SmokeTests.csproj' --configuration Relea
 With Node.js/npm and PowerShell installed, validate the package and build the same tarball layout used by OpenUPM:
 
 ```powershell
-& './Tools~/validate-package.ps1' -Tag v1.0.0
+& './Tools~/validate-package.ps1' -Tag v1.0.1
 & './Tools~/pack.ps1'
 ```
 

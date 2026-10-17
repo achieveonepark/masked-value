@@ -9,7 +9,7 @@
 Package Manager → **+ → Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.0.0
+https://github.com/achieveonepark/masked-value.git#v1.0.1
 ```
 
 [OpenUPM](https://openupm.com/packages/com.achieve.masked-values/) 등록이 완료되면 Unity 프로젝트 폴더에서 다음 명령으로도 설치할 수 있습니다.
@@ -47,9 +47,13 @@ Unity 6에서는 위 필드 선언만으로 Inspector 표시, 초기값 저장, 
 
 자세한 API·제약은 [사용 가이드](Documentation~/masked-values.md), 성능 측정은 [성능 문서](Documentation~/Performance.md)를 참고하세요.
 
+## 변조 이벤트
+
+`GuardedValueDiagnostics.TamperingDetected`를 구독하면 무결성 검사 실패 시 타입을 전달받습니다. 실제 메모리 쓰기 순간이 아닌 다음 검사 시점에 검사한 스레드에서 호출됩니다. 프로젝트 기본 정책은 정상 게임 처리를 중단하고 메인 스레드에서 플레이어 종료를 요청하는 것이며, Editor에서는 플레이 모드만 종료합니다. 패키지 자체가 자동 종료하는 것은 아닙니다. 구독 해제·중복 알림·주기적 검사·평문 초기값의 한계와 전체 예제는 [변조 이벤트 및 종료 가이드](Documentation~/Tampering.md)를 참고하세요.
+
 ## AI 스킬
 
-스킬 원본은 [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md)에 있습니다. Unity Skill Manager가 프로젝트의 `.agents/skills`와 `.claude/skills`에 취합합니다. 직접 호출: Codex `$achieve-masked-values`, Claude Code `/achieve-masked-values`.
+스킬 원본은 [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md)에 있습니다. 이 저장소의 [`.agents/skills/achieve-masked-values`](https://github.com/achieveonepark/masked-value/blob/main/.agents/skills/achieve-masked-values/SKILL.md)와 [`.claude/skills/achieve-masked-values`](https://github.com/achieveonepark/masked-value/blob/main/.claude/skills/achieve-masked-values/SKILL.md)에도 같은 스킬을 제공합니다. 설치한 Unity 프로젝트에서는 Unity Skill Manager가 취합합니다. 변조 감지 시 게임 종료를 기본 연동 정책으로 안내하며 이벤트 시점·스레드·직렬화 노출·실패 후 처리도 함께 확인합니다. 원본 수정 후 `Tools~/sync-skills.ps1`로 두 사본을 갱신합니다. 직접 호출: Codex `$achieve-masked-values`, Claude Code `/achieve-masked-values`.
 
 ## Inspector 지원
 

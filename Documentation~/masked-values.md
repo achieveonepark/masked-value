@@ -6,7 +6,7 @@ Unity에서 클래스 필드의 실제 값을 그대로 보관하지 않도록 �
 
 Unity 2022.3 이상에서 `Window > Package Manager > + > Add package from disk`를 선택하고 이 폴더의 `package.json`을 지정합니다. Samples 탭에서 **Class Fields** 예제를 가져올 수 있습니다. 외부 서버나 추가 패키지는 필요 없습니다.
 
-배포용 `com.achieve.masked-values-1.0.0.tgz`는 `+ > Add package from tarball`로 설치할 수 있습니다. [Unity 설치 문서](https://docs.unity3d.com/2022.3/Documentation/Manual/upm-ui-tarball.html)
+배포용 `com.achieve.masked-values-1.0.1.tgz`는 `+ > Add package from tarball`로 설치할 수 있습니다. [Unity 설치 문서](https://docs.unity3d.com/2022.3/Documentation/Manual/upm-ui-tarball.html)
 
 ```csharp
 using System;
@@ -46,7 +46,8 @@ hp.RefreshMask();               // 현재 값은 유지하며 키와 저장 비�
 if (!hp.TryGetValue(out current))
 {
     // 실패한 current는 default(int). 이 값을 게임 상태로 사용하지 않습니다.
-    // 세션 중단, 서버 상태 재조회 등 게임에 맞는 처리를 수행합니다.
+    // 종료 요청을 처리하고 이 게임 동작은 즉시 중단합니다.
+    return;
 }
 ```
 
@@ -57,6 +58,18 @@ if (!hp.TryGetValue(out current))
 - 구조체 복사는 독립적으로 수정할 수 있고, 정렬된 위치와 packed 필드 사이의 복사도 지원합니다. 동시 읽기·쓰기에는 외부 동기화가 필요합니다. `IsInitialized`는 초기화 표시이며 무결성 검사를 수행하지 않습니다.
 
 이 보호는 일반적인 저장값·키·검증값 덮어쓰기를 감지합니다. 검증 코드 패치, 난수 시드 추출과 검증값 위조, 객체 전체의 과거 스냅샷 복원, 전체를 0으로 지우는 초기화, 정상 setter 호출은 차단하지 않습니다. `default(GuardedValue<T>)`를 허용하므로 전체 0 초기화와 원래 기본값은 구분할 수 없습니다. 자동 복구나 범용 게임 규칙 검증은 제공하지 않습니다. 온라인 게임의 실제 HP·재화와 유효한 상태 변화는 서버에서 결정해야 합니다.
+
+## 변조 감지 리스너와 게임 종료
+
+`GuardedValueDiagnostics.TamperingDetected += OnTampering`으로 구독하고, 생명주기 종료 시 같은 핸들러를 `-=`로 해제합니다. 프로젝트 기본 정책은 **감지 시 정상 게임 처리를 중단하고 게임 종료를 요청**하는 것입니다. 패키지가 리스너 없이 게임을 자동 종료하지는 않습니다.
+
+이벤트는 외부 메모리 쓰기 순간이 아니라 **다음 무결성 검사가 실패한 시점**에 동기 호출됩니다. 읽기·쓰기·재마스킹·`Try` API·`CheckIntegrity()`가 검사하며, 접근하지 않는 값은 주기적인 명시적 검사가 필요합니다. 검사를 거치기 전에 변조한 값을 원상복구하면 놓칠 수도 있습니다. 전달 정보는 값의 타입뿐이며 객체·필드·주소나 평문은 제공하지 않습니다.
+
+워커 스레드에서도 호출될 수 있으므로 핸들러에서는 `Interlocked`로 종료 요청 플래그만 설정합니다. 메인 스레드의 `Update`에서 요청을 한 번 처리하여 플레이어는 `Application.Quit()`, Editor는 `EditorApplication.isPlaying = false`로 플레이 모드만 종료합니다. Unity Editor나 다른 프로세스를 강제로 종료하지 않습니다. 종료가 지원되지 않는 플랫폼은 후속 플레이를 차단하고 플랫폼에 맞는 세션 종료 흐름을 사용합니다.
+
+실패한 `TryGetValue`의 기본값으로 게임을 계속 진행하지 말고 현재 동작에서 즉시 반환합니다. 핸들러에서 같은 손상 값을 다시 읽거나 예외를 던지지 않으며, 반복 실패에 따른 중복 종료 요청을 합칩니다. 초기 씬의 활성 부트스트랩에 리스너를 한 번 연결하고 씬 전환·구독 해제·도메인/씬 리로드 비활성 설정도 확인합니다.
+
+완전한 C# 리스너 예제, 성능, 직렬화 초기값의 노출과 검증 방법은 [변조 이벤트 및 종료 가이드](Tampering.md)를 참고하세요. `MaskedValue<T>`·문자열·codec 타입에는 무결성 이벤트가 없습니다. `[NonSerialized]`는 메모리 은닉 기능이 아니며 Unity 6의 평문 초기 설정값 변조 역시 이 이벤트의 감지 대상이 아닙니다.
 
 ## 성능
 

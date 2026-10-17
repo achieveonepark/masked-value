@@ -32,14 +32,14 @@ try {
             'Runtime/Unity/Achieve.MaskedValues.Unity.asmdef', 'Runtime/Unity/MaskedValueFieldAttribute.cs',
             'Editor.meta', 'Editor/Achieve.MaskedValues.Editor.asmdef', 'Editor/MaskedValueFieldDrawer.cs',
             'Samples~/InspectorFields/InspectorFieldsExample.cs',
-            'Documentation~/Inspector.md',
+            'Documentation~/Inspector.md', 'Documentation~/Tampering.md',
             'Samples~/ClassFields/MaskedFieldsExample.cs', 'Documentation~/masked-values.md',
             'Documentation~/Performance.md', 'Skills~/achieve-masked-values/SKILL.md',
             'Skills~/achieve-masked-values/references/package-guide.md')) {
         if ($taskFiles -cnotcontains $taskRequired) { throw "Missing distribution file: $taskRequired" }
     }
     foreach ($taskFile in $taskFiles) {
-        if ($taskFile -match '(^|/)(Tests~|Tools~|Artifacts~|\.github|bin|obj|Library|Temp)(/|$)') {
+        if ($taskFile -match '(^|/)(Tests~|Tools~|Artifacts~|\.github|\.agents|\.claude|bin|obj|Library|Temp)(/|$)') {
             throw "Development file included in distribution: $taskFile"
         }
         if ($taskFile -match '^(Runtime|Editor)/.*\.(cs|asmdef)$' -and $taskFiles -cnotcontains ($taskFile + '.meta')) {

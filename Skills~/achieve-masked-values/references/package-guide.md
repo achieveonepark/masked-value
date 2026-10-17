@@ -39,6 +39,8 @@ public sealed class PlayerState : MonoBehaviour
 
 `GuardedValueDiagnostics.TamperingDetected`는 실패한 검사마다 타입만 전달한다. 핸들러가 같은 손상된 값을 다시 읽어 재귀를 만들지 않게 한다. 게임에서 워커 스레드 접근이 있으면 외부 동기화와 진단 이벤트의 스레드 처리를 설계한다.
 
+게임 연동 기본 대응은 **감지 시 게임 종료**다. 이벤트는 다음 읽기·쓰기·명시적 검사에서 발생하며 실제 메모리 변경 순간을 가로채지 않는다. 전역 리스너는 활성 부트스트랩에서 한 번 구독하고 수명 종료 시 해제한다. 핸들러에서는 atomic 플래그만 설정하고 메인 스레드에서 한 번 Application.Quit을 요청한다. Editor는 UNITY_EDITOR 분기로 플레이 모드만 종료한다. Try 실패 후에는 현재 동작에서 즉시 반환하고 종료 플래그로 추가 상태 변경을 막는다. 구독 생명주기·리로드 설정·플랫폼 종료 제한·정상 저장 훅도 확인한다. 전체 예제는 설치 패키지 루트의 Documentation~/Tampering.md다.
+
 래퍼 복사는 독립된 값처럼 사용한다. 원본을 변경할 목적이라면 원래 필드에 다시 대입하거나 적절한 ref 접근을 사용한다. 마스킹된 내부 storage는 유효하지 않은 bool/float/decimal 비트일 수 있으므로 core 구현에서 T로 읽지 않고 바이트로 취급한다.
 
 ## 명시적 codec과 할당
@@ -66,4 +68,4 @@ Unity 6에서는 기존 타입의 public 필드 또는 [SerializeField] private 
 
 `Tools~/verify.ps1`은 Unity에 포함된 SDK로 .NET 검증과 엔진 참조 컴파일을 할 수 있다. .NET 실행 결과는 실제 Unity 또는 IL2CPP 실행 결과와 구분한다. `Tests~/UnityProject`는 별도 Unity 검증 프로젝트다. 툴 실행 전 그 스크립트의 입력·출력 경로를 확인하고 현재 게임 프로젝트를 임의로 교체하지 않는다.
 
-세 패키지 연동 예제의 HP·골드·페이즈는 알려진 원본 루트의 `Samples/AchieveIntegration/Runtime/IntegrationDemoPlayer.cs`에서 확인한다.
+Unity 6의 로드한 initialValue는 평문 설정 데이터로 남고 런타임 변조 이벤트의 검사 대상이 아니다. NonSerialized를 메모리 보호로 설명하지 않는다. 검증 실패 후 평문 백업이나 기본값을 정상 값으로 간주해 계속 실행하지 않는다.

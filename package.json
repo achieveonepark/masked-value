@@ -1,6 +1,6 @@
 {
   "name": "com.achieve.masked-values",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Masked Values",
   "description": "Low-allocation runtime value masking and optional lightweight tamper detection for Unity. Not cryptographic encryption or authentication.",
   "unity": "2022.3",
