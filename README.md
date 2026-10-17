@@ -1,5 +1,8 @@
 # Masked Values
 
+[![openupm](https://img.shields.io/npm/v/com.achieve.masked-values?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.achieve.masked-values/)
+[![openupm](https://img.shields.io/badge/dynamic/json?color=brightgreen&label=downloads&query=%24.downloads&suffix=%2Fmonth&url=https%3A%2F%2Fpackage.openupm.com%2Fdownloads%2Fpoint%2Flast-month%2Fcom.achieve.masked-values)](https://openupm.com/packages/com.achieve.masked-values/)
+
 [한국어](README.ko.md)
 
 Low-allocation runtime value masking and optional lightweight tamper detection for **Unity 2022.3 or later**. Supports unmanaged values, strings, and reference-containing data through explicit codecs. No external package dependencies.
