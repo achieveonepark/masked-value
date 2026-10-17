@@ -6,5 +6,5 @@
   "excludePlatforms": [],
   "allowUnsafeCode": true,
   "autoReferenced": true,
-  "noEngineReferences": true
+  "noEngineReferences": false
 }

@@ -6,13 +6,24 @@ namespace Achieve.MaskedValues
     /// Masks UTF-16 code units. Assignment allocates storage; Value allocates the
     /// resulting string. CopyTo reuses caller-owned memory without allocation.
     /// </summary>
-    public struct MaskedString
+    [Serializable]
+    public partial struct MaskedString
     {
-        private ushort[] storage;
-        private ulong key;
+        [NonSerialized] private ushort[] storage;
+#if UNITY_6000_0_OR_NEWER
+        [UnityEngine.SerializeField] private string initialValue;
+#endif
+        [NonSerialized] private ulong key;
 
         public MaskedString(string value)
         {
+#if UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR
+            initialValue = value;
+#else
+            initialValue = default;
+#endif
+#endif
             storage = null;
             key = 0;
             Value = value;
@@ -85,6 +96,17 @@ namespace Achieve.MaskedValues
 
         public static implicit operator MaskedString(string value) => new MaskedString(value);
         public static implicit operator string(MaskedString value) => value.Value;
+        public static MaskedString operator +(MaskedString left, string right)
+        {
+            left.Value = string.Concat(left.Value, right);
+            return left;
+        }
+        public static MaskedString operator +(string left, MaskedString right)
+        {
+            right.Value = string.Concat(left, right.Value);
+            return right;
+        }
+        public static MaskedString operator +(MaskedString left, MaskedString right) => left + right.Value;
         public override string ToString() => "<masked string>";
     }
 }

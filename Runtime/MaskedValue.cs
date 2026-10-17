@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Achieve.MaskedValues
@@ -7,15 +8,26 @@ namespace Achieve.MaskedValues
     /// construction, reading and writing allocate no managed memory.
     /// This is reversible memory obfuscation, not cryptographic encryption.
     /// </summary>
-    public unsafe struct MaskedValue<T> where T : unmanaged
+    [Serializable]
+    public unsafe partial struct MaskedValue<T> where T : unmanaged
     {
         // Never access this storage as a T: masked bools, floats and decimals may
         // have invalid representations. Only the decoded bytes are returned as T.
-        private T storage;
-        private ulong key;
+        [NonSerialized] private T storage;
+#if UNITY_6000_0_OR_NEWER
+        [UnityEngine.SerializeField] private T initialValue;
+#endif
+        [NonSerialized] private ulong key;
 
         public MaskedValue(T value)
         {
+#if UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR
+            initialValue = value;
+#else
+            initialValue = default;
+#endif
+#endif
             storage = default;
             key = 0;
             Value = value;

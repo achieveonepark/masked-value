@@ -1,77 +1,70 @@
 # Inspector support
 
-`MaskedValueFieldAttribute` connects a Unity-serialized initial value to a separate runtime masked field. It supports the normal Inspector without replacing your component's custom Editor.
-
-## Usage
+In **Unity 6**, declare the existing masked types as ordinary fields:
 
 ```csharp
-using System;
 using Achieve.MaskedValues;
 using UnityEngine;
 
 public sealed class PlayerState : MonoBehaviour
 {
-    [SerializeField, MaskedValueField(nameof(health))]
-    private int initialHealth = 100;
+    public GuardedValue<int> health = 100;
+    public MaskedValue<float> moveSpeed = 5f;
+    public MaskedValue<Vector3> spawnPosition = new Vector3(1, 2, 3);
+    public MaskedString playerName = "Player";
 
-    [NonSerialized] private GuardedValue<int> health;
-
-    private void Awake() => health = initialHealth;
-
-    public void TakeDamage(int amount) => health.Value -= amount;
+    public void TakeDamage(int amount) => health -= amount;
 }
 ```
 
-The initial field and the masked `Value` must have exactly the same type. The attribute names a field on the same object or nested container, including private inherited fields. Initialize the runtime field explicitly in `Awake` or another suitable lifecycle method. The attribute does not initialize values or scan game objects at runtime.
+No companion initial-value field, `MaskedValueField`, `NonSerialized`, or `Awake` is required. Private fields use Unity's normal `[SerializeField]`. Custom structs still need `[Serializable]` and Unity-serializable members. Import **Inspector Fields** from Package Manager for a working Unity 6 sample.
 
-Edit mode uses normal Unity serialization, so initial values support Undo, multi-object editing, scene saving, and prefab overrides. Play mode switches to the live masked value for objects participating in Play mode; prefab assets continue to edit their initial values. Runtime editing requires a single selected object and does not persist to the initial field. Runtime edits do not participate in Unity's serialized Undo history.
+Edit mode uses native controls and row heights, with Undo, scene/prefab persistence, and multi-object editing. Play mode displays/edits live `.Value`; runtime edits preserve the authoring value and end with Play mode. Runtime Undo is not provided; select one object to edit live values.
 
-Import the **Inspector Fields** sample from Package Manager for `GuardedValue<int>`, `MaskedValue<float>`, `MaskedValue<Vector3>`, `MaskedString`, and a custom unmanaged struct. Custom initial-value structs must be `[Serializable]` and follow Unity's normal field serialization rules.
+## Serialization and performance
 
-## Assembly definitions
+Unity 6 wrappers contain an internal authoring value. Serialization callbacks restore fresh masked state when loading or cloning. Keys, tags, and runtime storage are nonserialized. Loading/cloning restores authored defaults, including after a domain reload; it does not save current gameplay state. Unity's normal rules still apply when scene/domain reload is disabled.
 
-The core assembly remains `Achieve.MaskedValues` and has no Unity engine references. If your component is in an assembly definition, add references to both:
+Drawing, reflection, boxing, editing buffers, and refresh scheduling are confined to the Editor assembly. Gameplay getters/setters and integrity checks have no additional Inspector branch or reflection. Warm unmanaged access and numeric operators allocate no managed memory. Restoring strings or codecs can allocate. The authoring field can increase wrapper size, especially for larger structs; small values may fit existing padding. Standalone .NET layouts have no authoring field or Unity dependency.
 
-- `Achieve.MaskedValues`
-- `Achieve.MaskedValues.Unity`
+Player constructors do not retain their input as plaintext authoring data. Loaded initial values remain plain authoring data in memory and in scene/prefab/build assets, so future clones can restore their defaults. The Editor retains constructor initial values for authoring. This does not encrypt assets or implement save-game persistence; runtime player JSON serialization does not preserve live values. Runtime-created objects without loaded authoring data clone with default initial values.
 
-The second assembly supplies the attribute. It contains no runtime update loop. The attribute is marked `[Conditional("UNITY_EDITOR")]`, so its uses are omitted from player metadata. `Achieve.MaskedValues.Editor` is restricted to the Editor and excluded from player builds.
+Live refresh is limited to five times per second. String/codec getters can allocate in the Editor, so measure player performance separately. Native controls use isolated scratch objects: delayed controls cannot write runtime values into scene/prefab authoring fields. Edits preserve nonserialized custom state and live changes to untouched sibling fields.
 
-## Codec-backed values
-
-`MaskedData<T>` can be bound when `T` is also Unity-serializable. The runtime codec must be initialized by your own code before the Inspector reads it:
+## Codec-backed data
 
 ```csharp
-[SerializeField, MaskedValueField(nameof(profile))]
-private PlayerProfile initialProfile;
-
-[NonSerialized] private MaskedData<PlayerProfile> profile;
-
-private void Awake()
-{
-    profile = new MaskedData<PlayerProfile>(initialProfile, PlayerProfileCodec.Instance);
-}
+public MaskedData<PlayerProfile> profile = new MaskedData<PlayerProfile>(
+    new PlayerProfile { name = "Player", level = 1 }, PlayerProfileCodec.Instance);
 ```
 
-The Inspector does not discover or create codecs. Reading a codec-backed value invokes its decoder. Runtime edits use the existing codec's encoder. Custom classes and structs are edited through their Unity-serialized fields; nonserialized state is preserved when applying an edit.
+Both the value and codec implementation must be `[Serializable]` for direct Unity persistence. The codec is stored as a managed reference; its configuration must follow Unity serialization rules. Callbacks can run on serialization threads, so decoding must not use main-thread Unity APIs. Codecs are never discovered or created by reflection. Default `MaskedData<T>` still requires a codec before assignment. Runtime-only or nonserializable codecs can use the bridge below.
 
-## Performance and storage
+## Optional bridge and Unity 2022.3
 
-The existing masked wrappers, their layouts, and their read/write implementations are unchanged. Gameplay accesses the same `.Value` APIs directly. Initializing from a serialized field performs a normal one-time assignment; there is no new lazy-initialization branch or reflection in gameplay access.
+Unity 2022.3 does not support serialization callbacks on structs. On that version, or for custom initialization, use the optional bridge:
 
-Reflection, boxing, and serialized editing buffers run in the Editor. Automatic Inspector refresh requests are limited to five per second. Inspecting strings or codec-backed values can allocate in the Editor because their normal getters can allocate. An open Inspector can therefore affect Editor profiling; measure player performance separately.
+```csharp
+[SerializeField, MaskedValueField(nameof(health))]
+private int initialHealth = 100;
 
-The serialized initial fields add their normal storage to the component and remain plain authoring data in scenes, prefabs, and builds. They do not contain changing live game state. If a retained initial value is unnecessary after initialization, your component can clear that field after copying it into the masked value. Inspector support is an authoring/debugging tool, not encryption of authored data.
+[System.NonSerialized] private GuardedValue<int> health;
 
-Native controls use an isolated, hidden scratch object. Color pickers and other delayed controls can update it without applying live values to a scene or prefab. Only actual edits are passed to the masked setter; repainting does not remask or re-tag a value. Edits preserve nonserialized custom fields and live changes to untouched sibling fields.
+private void Awake() => health = initialHealth;
+```
 
-## Limits and failure behavior
+The initial field and masked `.Value` must have the same type and share an owner. Private inherited fields and pairs inside nested structs/lists/arrays are supported. Initialize the runtime field yourself. This attribute remains optional on Unity 6, including for manual codec initialization.
 
-- Supported initial values must be serializable by Unity and accessible through `SerializedProperty.boxedValue`. Primitive numeric types, booleans, strings, enums, common Unity value types, and serializable custom structs/classes are supported. Runtime-only types such as `decimal` do not automatically gain Inspector support.
-- Bind one value field. Array/list roots, fixed buffers, and `[SerializeReference]` initial fields are unsupported. A bound pair can live inside nested serialized structs, arrays, or lists; struct changes are copied back to the owner. Cyclic or deeply nested reference graphs are rejected.
-- Keep masks/keys/tags nonserialized. Domain reload resets runtime wrappers. Your normal initialization and lifecycle code must restore them; this feature does not change Unity's behavior when domain/scene reload is disabled.
-- Corrupt guarded values are rejected by their normal getter/setter checks. The Inspector shows an error and pauses reads until **Retry read**; it does not repair or overwrite the value. These checks can trigger the package's existing tampering diagnostic event. Exceptions from custom codecs are handled the same way.
-- The Inspector runs on Unity's main thread. It does not add synchronization for gameplay code that changes masked values on worker threads.
-- Custom Editors must draw the initial serialized property for its drawer to run. IMGUI and UI Toolkit hosts are supported. Other attributes or custom drawers can affect which drawer Unity selects for a field.
+Components in assembly definitions need `Achieve.MaskedValues`; the optional bridge additionally needs `Achieve.MaskedValues.Unity`. `Achieve.MaskedValues.Editor` is Editor-only, and bridge attribute uses are excluded from player metadata.
 
-See Unity's [serialization rules](https://docs.unity3d.com/2022.3/Documentation/Manual/script-Serialization.html) and [`SerializedProperty.boxedValue` restrictions](https://docs.unity3d.com/2022.3/Documentation/ScriptReference/SerializedProperty-boxedValue.html).
+## Limits
+
+- Values must be Unity-serializable and accessible through `SerializedProperty.boxedValue`. Runtime types such as `decimal` do not automatically gain Inspector support.
+- Direct wrappers can appear in arrays/lists and nested structs. A wrapper's value cannot itself be an array/list root, fixed buffer, or `[SerializeReference]` value. Cyclic/deep graphs are rejected.
+- Corrupt guarded values are rejected by normal checks. The Inspector reports the error and pauses reads until **Retry read**; it never repairs corrupt state. Explicit deserialization creates fresh state from trusted authoring data and is not tamper protected.
+- Custom Editors must draw the serialized property. IMGUI and UI Toolkit are supported; other drawers/attributes can affect drawer selection.
+- Wrappers remain unsynchronized. Do not share mutable gameplay state or access Unity objects from serialization callbacks/codecs.
+
+Serialization, Undo, collection binding, native row height, operators, and allocations were checked on Unity 6000.5.10f1. Unity 2022.3, other Unity 6 versions, IL2CPP, and devices need separate execution validation.
+
+See Unity's [serialization callbacks](https://docs.unity3d.com/6000.0/Documentation/ScriptReference/ISerializationCallbackReceiver.html), [2022.3 callback limitations](https://docs.unity3d.com/2022.3/Documentation/ScriptReference/ISerializationCallbackReceiver.html), and [`SerializedProperty.boxedValue`](https://docs.unity3d.com/2022.3/Documentation/ScriptReference/SerializedProperty-boxedValue.html).

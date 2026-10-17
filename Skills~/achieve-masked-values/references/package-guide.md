@@ -62,6 +62,8 @@ public interface ISpanValueCodec<T>
 
 core 구현은 `Runtime/MaskedValue.cs`, `GuardedValue.cs`, `ValueMask.cs`, `ValueIntegrity.cs`, `MaskKeys.cs`다. 문자열·codec은 `MaskedString.cs`, `MaskedData.cs`, `ISpanValueCodec.cs`를 확인한다. 이 패키지에는 에디터 창이 없다. UI를 추가하는 작업이 요청되면 UI Toolkit과 Unity 톤을 따른다.
 
+Unity 6에서는 기존 타입의 public 필드 또는 [SerializeField] private 필드를 그대로 Inspector에 노출한다. UnitySerialization.cs의 로드 콜백이 초기값을 복원하며 값 접근에는 추가 검사가 없다. 숫자 연산자는 *.Operators.cs와 ValueArithmetic.cs에 있고 리플렉션·dynamic·박싱을 사용하지 않는다. 내부 초기값은 메모리를 늘릴 수 있으며 로드한 값은 복제용 설정 데이터로 남는다. Unity 2022.3은 기존 초기값/MaskedValueField 연결을 사용한다.
+
 `Tools~/verify.ps1`은 Unity에 포함된 SDK로 .NET 검증과 엔진 참조 컴파일을 할 수 있다. .NET 실행 결과는 실제 Unity 또는 IL2CPP 실행 결과와 구분한다. `Tests~/UnityProject`는 별도 Unity 검증 프로젝트다. 툴 실행 전 그 스크립트의 입력·출력 경로를 확인하고 현재 게임 프로젝트를 임의로 교체하지 않는다.
 
 세 패키지 연동 예제의 HP·골드·페이즈는 알려진 원본 루트의 `Samples/AchieveIntegration/Runtime/IntegrationDemoPlayer.cs`에서 확인한다.

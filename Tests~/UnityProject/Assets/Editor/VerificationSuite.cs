@@ -34,7 +34,7 @@ public static unsafe class MaskedValuesVerificationSuite
         var report = new StringBuilder();
         report.AppendLine("# Masked Values verification");
         report.AppendLine();
-        report.AppendLine("Passed " + assertions + " assertions. No reflection or automatic serialization is used by the core runtime.");
+        report.AppendLine("Passed " + assertions + " assertions. Gameplay value access uses no reflection or automatic serialization.");
         report.AppendLine("Measured managed allocation after warmup: masked/guarded primitive and struct read-write, guarded refresh and failed TryGetValue, string CopyTo/ValueEquals, and codec CopyTo: 0 bytes.");
         report.AppendLine();
         report.AppendLine("Release, single thread, median of 7 samples, 1,000,000 iterations per sample. These are this machine's measurements, not a zero-overhead guarantee.");
@@ -193,8 +193,13 @@ public static unsafe class MaskedValuesVerificationSuite
         Require(different, "reassignment remasks identical value");
 
         var small = new MaskedValue<bool>(true);
+#if UNITY_6000_0_OR_NEWER
+        Require(sizeof(MaskedValue<int>) <= 24, "serialized small wrapper size");
+        Require(sizeof(MaskedValue<Stats>) <= sizeof(Stats) * 2 + 8, "serialized struct wrapper size");
+#else
         Require(sizeof(MaskedValue<int>) <= 16, "small wrapper size");
         Require(sizeof(MaskedValue<Stats>) <= sizeof(Stats) + 8, "struct wrapper size");
+#endif
         // The compiler accepts these wrappers as unmanaged: no hidden object/array references.
         Capture(small);
         Capture(new MaskedValue<decimal>(123.45m));
@@ -275,7 +280,11 @@ public static unsafe class MaskedValuesVerificationSuite
             floating.Value = input;
             Bits(input, floating.Value);
         }
+#if UNITY_6000_0_OR_NEWER
+        Require(sizeof(GuardedValue<int>) <= 32 && sizeof(GuardedValue<Stats>) <= sizeof(Stats) * 2 + 16,
+#else
         Require(sizeof(GuardedValue<int>) <= 24 && sizeof(GuardedValue<Stats>) <= sizeof(Stats) + 16,
+#endif
             "guarded wrapper sizes");
     }
 

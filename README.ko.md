@@ -9,7 +9,7 @@
 Package Manager → **+ → Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.1.0
+https://github.com/achieveonepark/masked-value.git#v1.2.0
 ```
 
 [OpenUPM](https://openupm.com/packages/com.achieve.masked-values/) 등록이 완료되면 Unity 프로젝트 폴더에서 다음 명령으로도 설치할 수 있습니다.
@@ -23,22 +23,15 @@ Scoped Registry를 직접 설정하는 방법은 [영문 README](README.md#openu
 ## 사용
 
 ```csharp
-using System;
 using Achieve.MaskedValues;
 using UnityEngine;
 
 public sealed class PlayerState : MonoBehaviour
 {
-    [NonSerialized] private GuardedValue<int> health;
-    [NonSerialized] private MaskedValue<float> speed;
+    public GuardedValue<int> health = 100;
+    public MaskedValue<float> speed = 5f;
 
-    private void Awake()
-    {
-        health = 100;
-        speed = 5f;
-    }
-
-    public void TakeDamage(int amount) => health.Value -= amount;
+    public void TakeDamage(int amount) => health -= amount;
 }
 ```
 
@@ -46,7 +39,7 @@ public sealed class PlayerState : MonoBehaviour
 
 변조 감지 시 `TryGetValue`, `TrySetValue`, `CheckIntegrity`, `TryRefreshMask`는 `false`를 반환하며, `Value` 접근과 `RefreshMask()`는 `InvalidOperationException`을 발생시킵니다. 재마스킹은 `RefreshMask()`로 직접 호출합니다.
 
-런타임 전용 타입이므로 Unity 직렬화·Inspector 편집·저장 파일·도메인 리로드 후 복원에는 사용하지 않습니다. 필드에 `[NonSerialized]`를 붙이고 `Awake` 등에서 초기화하세요. 동시 접근에는 외부 동기화가 필요합니다.
+Unity 6에서는 위 필드 선언만으로 Inspector 표시, 초기값 저장, 로드 시 복원을 지원합니다. `+=`, `-=`, `*=`, `/=`, `%=`, `++`, `--`도 사용할 수 있습니다. 런타임 전용 필드는 `[NonSerialized]`를 사용하세요. 동시 접근에는 외부 동기화가 필요합니다.
 
 키 추출, 검증 코드 패치, 정상 스냅샷 복원, 전체 기본값 초기화, 정상 API를 통한 변경은 막지 못합니다. 온라인 게임의 실제 상태는 서버에서 검증해야 합니다. 초기화 후 unmanaged 값의 정상 읽기·쓰기·재마스킹에는 GC 할당이 없지만 문자열과 codec 처리에서는 할당이 발생할 수 있습니다.
 
@@ -60,18 +53,15 @@ public sealed class PlayerState : MonoBehaviour
 
 ## Inspector 지원
 
-직렬화할 초기값 필드에 `[MaskedValueField]`를 붙이고 런타임 필드 이름을 지정합니다.
+Unity 6에서는 기존 타입을 그대로 선언합니다. 별도 초기값 필드, 연결 특성, `Awake`가 필요하지 않습니다.
 
 ```csharp
-[SerializeField, MaskedValueField(nameof(health))]
-private int initialHealth = 100;
-
-[NonSerialized] private GuardedValue<int> health;
-
-private void Awake() => health = initialHealth;
+public GuardedValue<int> health = 100;
+public MaskedValue<float> moveSpeed = 5f;
+public MaskedString playerName = "Player";
 ```
 
-편집 모드에서는 초기값을 설정하고 씬·프리팹에 저장할 수 있습니다. 플레이 중에는 같은 위치에서 현재 `health.Value`를 확인하고 수정하며, 이 변경은 플레이 종료 후 유지되지 않습니다. 런타임 타입과 읽기·쓰기 경로는 그대로이며 리플렉션과 편집 버퍼는 Editor 어셈블리에만 있습니다.
+편집 모드에서는 초기값을 저장하고, 플레이 중에는 현재 값을 확인·수정합니다. 플레이 중 수정은 초기값에 저장되지 않습니다. UI와 리플렉션은 Editor 전용이며 값 접근 경로에는 추가 검사가 없습니다. 직렬화용 초기값 저장 공간과 로드 시 복원 처리는 빌드에도 필요하며 큰 구조체는 메모리가 증가할 수 있습니다. 로드한 초기값은 복제 시 재사용할 평문 설정 데이터로 남습니다. Unity 2022.3에서는 기존 `[MaskedValueField]` 연결 방식을 사용합니다.
 
 Package Manager에서 **Inspector Fields** 샘플을 가져올 수 있습니다. 세부 설정과 제약은 [Inspector 가이드](Documentation~/Inspector.md)를 참고하세요. 초기값은 일반 직렬화 데이터이므로 씬·프리팹·빌드에 평문으로 저장됩니다.
 

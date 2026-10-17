@@ -7,15 +7,29 @@ namespace Achieve.MaskedValues
     /// Reference-containing structs/classes use an explicit span codec.
     /// Assignment allocates masked storage. Decoding may allocate in the codec.
     /// </summary>
-    public struct MaskedData<T>
+    [Serializable]
+    public partial struct MaskedData<T>
     {
         private const int StackBufferLimit = 512;
-        private byte[] storage;
-        private ulong key;
+        [NonSerialized] private byte[] storage;
+#if UNITY_6000_0_OR_NEWER
+        [UnityEngine.SerializeField] private T initialValue;
+#endif
+        [NonSerialized] private ulong key;
+#if UNITY_6000_0_OR_NEWER
+        [UnityEngine.SerializeReference]
+#endif
         private ISpanValueCodec<T> codec;
 
         public MaskedData(T value, ISpanValueCodec<T> codec)
         {
+#if UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR
+            initialValue = value;
+#else
+            initialValue = default;
+#endif
+#endif
             if (codec == null)
                 throw new ArgumentNullException(nameof(codec));
             storage = null;
@@ -95,6 +109,7 @@ namespace Achieve.MaskedValues
             }
         }
 
+        public static implicit operator T(MaskedData<T> value) => value.Value;
         public override string ToString() => "<masked data>";
     }
 }

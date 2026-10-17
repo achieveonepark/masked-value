@@ -6,7 +6,7 @@ Unity에서 클래스 필드의 실제 값을 그대로 보관하지 않도록 �
 
 Unity 2022.3 이상에서 `Window > Package Manager > + > Add package from disk`를 선택하고 이 폴더의 `package.json`을 지정합니다. Samples 탭에서 **Class Fields** 예제를 가져올 수 있습니다. 외부 서버나 추가 패키지는 필요 없습니다.
 
-배포용 `com.achieve.masked-values-1.1.0.tgz`는 `+ > Add package from tarball`로 설치할 수 있습니다. [Unity 설치 문서](https://docs.unity3d.com/2022.3/Documentation/Manual/upm-ui-tarball.html)
+배포용 `com.achieve.masked-values-1.2.0.tgz`는 `+ > Add package from tarball`로 설치할 수 있습니다. [Unity 설치 문서](https://docs.unity3d.com/2022.3/Documentation/Manual/upm-ui-tarball.html)
 
 ```csharp
 using System;
@@ -74,9 +74,9 @@ if (!hp.TryGetValue(out current))
 
 기본 `MaskedValue<T>`의 `.Value`는 `default(T)`입니다. 기본 `MaskedString`의 값은 `null`입니다. 값 타입 복사는 독립적으로 수정할 수 있고, 배열을 사용하는 타입은 대입할 때 새 저장 공간을 만듭니다.
 
-이 타입들은 런타임 전용입니다. 래퍼 자체의 Unity 직렬화, 저장 파일, 도메인 리로드 후 복원 기능은 제공하지 않습니다. MonoBehaviour/ScriptableObject 필드에는 `[NonSerialized]`를 사용하고 초기 상태는 `Awake` 등에서 설정하세요. 스크립트 리로드 시 값이 초기화될 수 있습니다.
+Unity 6에서는 `public GuardedValue<int> health = 100;`처럼 기존 타입을 선언하면 Inspector에 표시되고 초기값이 저장됩니다. 로드·복제 시 초기값으로 새 마스킹 상태를 만들며 플레이 중 값은 저장하지 않습니다. 런타임 전용 필드는 `[NonSerialized]`를 사용합니다. 초기값 필드가 내부에 추가되어 큰 구조체의 메모리는 늘 수 있지만 값 접근마다 추가 검사나 리플렉션을 수행하지 않습니다.
 
-Inspector에서 초기값을 설정하고 플레이 중 현재 값을 확인·수정하려면 별도의 직렬화 초기값 필드에 `[MaskedValueField(nameof(runtimeField))]`를 붙입니다. 초기값만 씬·프리팹에 저장되며 런타임 래퍼의 읽기·쓰기 구현은 그대로입니다. Package Manager의 **Inspector Fields** 샘플과 [Inspector 가이드](Inspector.md)를 참고하세요.
+Unity 2022.3이나 수동 초기화에는 별도 초기값 필드의 `[MaskedValueField(nameof(runtimeField))]` 연결 방식도 유지됩니다. 숫자 래퍼는 사칙연산·나머지·복합 대입·증감을 지원합니다. Package Manager의 **Inspector Fields** 샘플과 [Inspector 가이드](Inspector.md)를 참고하세요.
 
 키와 은닉된 값은 같은 프로세스에 존재합니다. 단순 평문 값 검색을 어렵게 하지만 디버거, 키 추출이나 코드를 분석하는 공격자를 막지 않습니다. `MaskedValue<T>`, `MaskedString`, `MaskedData<T>`는 무결성 검증을 제공하지 않습니다. 선택적인 `GuardedValue<T>`는 위 범위에서 변조를 감지하며 메모리 추적 자체를 차단하지 않습니다. 읽어서 반환한 실제 값과 기존 입력 문자열은 별도의 평문 데이터입니다. 로그로 `.Value`를 출력하면 평문이 기록됩니다. 래퍼 자체의 `ToString()`은 내용을 출력하지 않습니다.
 

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 - 2026-10-17
+
+- Unity 6: declare `GuardedValue<T>`, `MaskedValue<T>`, `MaskedString`, and codec-backed `MaskedData<T>` directly in the Inspector. No companion field, linking attribute, or initialization method is required.
+- Native row heights and controls for authoring initial values and viewing/editing live values. Plain fields in arrays and nested structs are supported.
+- Serialization restores fresh masked state from authored initial values. Runtime storage, keys, and tags remain nonserialized. Authored defaults remain available for object cloning.
+- Unity 6 wrappers retain an initial-value field for serialization; large structs can occupy more memory. Gameplay getters/setters add no Inspector reflection, polling, or lazy initialization. Standalone .NET layouts remain unchanged.
+- Explicit arithmetic, compound assignment, remainder, unary, and increment/decrement operators for 12 numeric types, with guarded/masked combinations and string concatenation. Guarded operands still validate integrity.
+- Preserve the optional attribute bridge for Unity 2022.3 and custom initialization. Automatic struct serialization uses Unity 6 callbacks.
+- Verify numeric operators and warm zero allocations, Unity serialization/Undo, direct field/array editing, and the original behavior suite.
+
 ## 1.1.0 - 2026-10-17
 
 - Optional `[MaskedValueField]` Inspector bridge: persist normal initial values in Edit mode and view/edit masked values in Play mode.

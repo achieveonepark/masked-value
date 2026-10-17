@@ -1,6 +1,6 @@
 # Masked Values verification
 
-Passed 170628 assertions. No reflection or automatic serialization is used by the core runtime.
+Historical standalone .NET measurement: passed 170628 assertions. Gameplay value access uses no reflection or automatic serialization.
 Measured managed allocation after warmup: masked/guarded primitive and struct read-write, guarded refresh and failed TryGetValue, string CopyTo/ValueEquals, and codec CopyTo: 0 bytes.
 
 Release, single thread, median of 7 samples, 1,000,000 iterations per sample. These are this machine's measurements, not a zero-overhead guarantee.
@@ -45,3 +45,11 @@ Unity 6000.5.10f1의 실제 .NET Standard 2.1 및 엔진 참조 DLL을 사용한
 2026-10-17에 Unity 6000.5.10f1을 배치 모드로 실제 실행하여 기존 170,628개 assertion과 초기값·런타임 값 분리, 직렬화 편집 버퍼, Undo를 확인했습니다. 런타임 코어의 기존 소스와 구조체 배치는 변경하지 않았으며 정상 경로의 워밍업 후 GC 할당은 계속 0바이트였습니다.
 
 Inspector의 리플렉션·박싱·버퍼는 Editor 어셈블리에만 있습니다. Inspector를 열어 둔 Editor에서는 그 처리 비용과 문자열/codec getter의 할당이 추가될 수 있습니다. 플레이어용 샘플 컴파일에서 Inspector 특성이 메타데이터에서 제외됨도 확인합니다. 실제 Inspector 창의 마우스 조작·시각적 검증, Unity 2022.3 실행, IL2CPP 실행은 별도 확인이 필요합니다.
+
+## 직접 Inspector 지원과 연산자 검증 (1.2.0)
+
+2026-10-17, Unity 6000.5.10f1에서 기존 170,628개 검사, 직접 선언한 필드의 초기값 저장·복원·Undo, 문자열/구조체/명시적 codec, 배열 요소 편집을 실제 실행했습니다. 숫자 12종의 사칙연산·나머지·복합 대입·증감, guarded/masked 조합, 변조된 피연산자의 거부와 정상 연산 워밍업 후 GC 0바이트를 .NET과 Unity에서 확인했습니다.
+
+Unity 6 내부 초기값 필드는 구조체 크기를 늘릴 수 있습니다. 이번 x64 실행에서 int 래퍼는 패딩에 초기값이 들어가 masked 16바이트, guarded 24바이트를 유지했지만 큰 구조체에 일반화할 수 없습니다. 초기값 복원은 직렬화 콜백에서 수행되며 기존 Value getter/setter에는 추가 분기나 리플렉션이 없습니다. 문자열·codec 복원에는 원래 API와 같은 할당 비용이 있습니다.
+
+UNITY_EDITOR가 없는 플레이어 컴파일 경로도 별도 .NET 실행으로 검사하여 생성자가 런타임 입력을 평문 초기값으로 보관하지 않으며 로드한 초기값을 정상 복원하는 것을 확인했습니다. 로드한 초기값은 복제를 위해 설정 데이터로 남습니다. 이것은 실제 플레이어/IL2CPP 실행 검증과 구분됩니다. Inspector 화면은 연결한 Unity 프로젝트에서 별도로 확인했습니다. 위 과거 타이밍은 새 연산자의 측정값이나 IL2CPP 성능 보장이 아닙니다.

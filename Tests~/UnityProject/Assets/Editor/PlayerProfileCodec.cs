@@ -10,6 +10,7 @@ public struct PlayerProfile
 }
 
 // Explicit field handling without member discovery or automatic serialization.
+[Serializable]
 public sealed class PlayerProfileCodec : ISpanValueCodec<PlayerProfile>
 {
     public static readonly PlayerProfileCodec Instance = new PlayerProfileCodec();

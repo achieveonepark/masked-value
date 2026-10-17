@@ -21,6 +21,18 @@ namespace Achieve.MaskedValues.Editor
             BindingFlags.Instance | BindingFlags.NonPublic);
         private readonly string[] parentPath;
         private readonly string runtimeField;
+        private int runtimeIndex = -1;
+
+        internal static MaskedValueBinding ForPath(string propertyPath)
+        {
+            string path = propertyPath.Replace(".Array.data[", "[");
+            string leaf = path.Substring(path.LastIndexOf('.') + 1);
+            int bracket = leaf.IndexOf('[');
+            var binding = new MaskedValueBinding(path, bracket < 0 ? leaf : leaf.Substring(0, bracket));
+            if (bracket >= 0)
+                binding.runtimeIndex = int.Parse(leaf.Substring(bracket + 1, leaf.Length - bracket - 2), CultureInfo.InvariantCulture);
+            return binding;
+        }
 
         internal MaskedValueBinding(string initialPropertyPath, string runtimeFieldName)
         {
@@ -36,10 +48,15 @@ namespace Achieve.MaskedValues.Editor
         {
             object owner = ResolveOwner(target, null);
             FieldInfo field = GetRuntimeField(owner);
-            return GetValueProperty(field.FieldType).GetValue(field.GetValue(owner));
+            object masked = ReadMasked(owner, field);
+            return GetValueProperty(masked.GetType()).GetValue(masked);
         }
 
-        internal Type ValueType(object target) => GetValueProperty(GetRuntimeField(ResolveOwner(target, null)).FieldType).PropertyType;
+        internal Type ValueType(object target)
+        {
+            object owner = ResolveOwner(target, null);
+            return GetValueProperty(ReadMasked(owner, GetRuntimeField(owner)).GetType()).PropertyType;
+        }
 
         internal void Write(object target, object value) => Write(target, null, value, false);
 
@@ -50,8 +67,8 @@ namespace Achieve.MaskedValues.Editor
             var parents = new List<Parent>();
             object owner = ResolveOwner(target, parents);
             FieldInfo field = GetRuntimeField(owner);
-            PropertyInfo property = GetValueProperty(field.FieldType);
-            object masked = field.GetValue(owner);
+            object masked = ReadMasked(owner, field);
+            PropertyInfo property = GetValueProperty(masked.GetType());
             if (value != null && !property.PropertyType.IsInstanceOfType(value))
                 value = property.PropertyType.IsEnum
                     ? Enum.ToObject(property.PropertyType, value)
@@ -61,7 +78,27 @@ namespace Achieve.MaskedValues.Editor
             // check. A corrupt value must never be re-tagged by the Inspector.
             value = MergeSerializedFields(property.GetValue(masked), value, 0, before, changesOnly);
             property.SetValue(masked, value);
-            field.SetValue(owner, masked);
+            WriteMasked(owner, field, masked);
+            WriteParents(owner, parents);
+        }
+
+        private object ReadMasked(object owner, FieldInfo field)
+        {
+            object value = field.GetValue(owner);
+            if (runtimeIndex < 0) return value;
+            if (!(value is IList list) || runtimeIndex >= list.Count)
+                throw new InvalidOperationException("The masked collection element is unavailable.");
+            return list[runtimeIndex];
+        }
+
+        private void WriteMasked(object owner, FieldInfo field, object value)
+        {
+            if (runtimeIndex < 0) field.SetValue(owner, value);
+            else ((IList)field.GetValue(owner))[runtimeIndex] = value;
+        }
+
+        private static void WriteParents(object owner, List<Parent> parents)
+        {
             for (int i = parents.Count - 1; i >= 0; i--)
             {
                 Parent parent = parents[i];

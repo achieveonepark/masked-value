@@ -11,7 +11,7 @@ Low-allocation runtime value masking and optional lightweight tamper detection f
 In **Window > Package Manager**, choose **+ > Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.1.0
+https://github.com/achieveonepark/masked-value.git#v1.2.0
 ```
 
 ### OpenUPM
@@ -34,7 +34,7 @@ Alternatively, add the following scoped registry and dependency to your project'
     }
   ],
   "dependencies": {
-    "com.achieve.masked-values": "1.1.0"
+    "com.achieve.masked-values": "1.2.0"
   }
 }
 ```
@@ -42,22 +42,15 @@ Alternatively, add the following scoped registry and dependency to your project'
 ## Quick start
 
 ```csharp
-using System;
 using Achieve.MaskedValues;
 using UnityEngine;
 
 public sealed class PlayerState : MonoBehaviour
 {
-    [NonSerialized] private GuardedValue<int> health;
-    [NonSerialized] private MaskedValue<float> speed;
+    public GuardedValue<int> health = 100;
+    public MaskedValue<float> speed = 5f;
 
-    private void Awake()
-    {
-        health = 100;
-        speed = 5f;
-    }
-
-    public void TakeDamage(int amount) => health.Value -= amount;
+    public void TakeDamage(int amount) => health -= amount;
 }
 ```
 
@@ -74,24 +67,34 @@ Import **Class Fields** from the package's **Samples** tab in Package Manager fo
 
 ## Inspector support
 
-Use `[MaskedValueField]` on a serialized initial value and point it at a sibling runtime masked field:
+In **Unity 6**, declare ordinary serialized fields using the existing types:
 
 ```csharp
-[SerializeField, MaskedValueField(nameof(health))]
-private int initialHealth = 100;
-
-[NonSerialized] private GuardedValue<int> health;
-
-private void Awake() => health = initialHealth;
+public GuardedValue<int> health = 100;
+public MaskedValue<float> moveSpeed = 5f;
+public MaskedString playerName = "Player";
 ```
 
-In Edit mode, the field edits the initial value with normal scene/prefab persistence and Undo. In Play mode, the same field shows and edits `health.Value`; changes are temporary. The runtime types and their read/write paths are unchanged. Reflection and editing buffers live in the Editor assembly.
+No companion field, linking attribute, or initialization method is required. Edit mode supports initial-value persistence and Undo; Play mode displays/edits live values temporarily. Reflection and editing buffers stay in the Editor. Unity 6 serialization adds an internal authoring field and restores masked state on load, without extra gameplay getter/setter checks. Larger values may use more memory. Unity 2022.3 retains the optional `[MaskedValueField]` bridge.
 
 Import **Inspector Fields** for primitives, a Unity vector, a string, and a custom struct. See the [Inspector guide](Documentation~/Inspector.md) for assembly references, codec-backed data, performance, and limitations.
 
 ## Runtime behavior and limits
 
-The masked wrappers are runtime-only. Use `[NonSerialized]` on Unity component fields and initialize them in `Awake` or another runtime entry point. Inspector support persists separate initial values; masked storage, keys, and integrity tags are never serialized. The wrappers do not provide save-file persistence or restoration after a domain reload. Synchronize concurrent access externally.
+Unity 6 serializes authoring values and explicit serializable codecs; runtime storage, keys, and tags are never persisted. Loading/cloning restores authored defaults, rather than current gameplay state. Loaded initial values remain plain authoring data in memory and in assets. Player constructors do not retain runtime input as an authoring value. Use `[NonSerialized]` for runtime-only component fields. Standalone .NET layouts remain unchanged. Synchronize concurrent access externally.
+
+Numeric wrappers support `+`, `-`, `*`, `/`, `%`, compound assignment, unary signs, and prefix/postfix `++`/`--`, including guarded/masked combinations. Supported types: `byte`, `sbyte`, `short`, `ushort`, `char`, `int`, `uint`, `long`, `ulong`, `float`, `double`, `decimal`. Results keep the wrapper type. Integral overflow wraps, integer division by zero and decimal overflow throw, and floating division follows C#. A caller's `checked` block does not make these operators checked. Guarded operands validate before access. Comparisons and integral bitwise expressions use implicit conversions. Unity vectors support addition/subtraction, colors also multiplication, and quaternions multiplication; other custom operations use `.Value`.
+
+```csharp
+health += 10;
+health -= 5;
+health *= 2;
+health /= 2;
+health %= 100;
+health++;
+```
+
+`MaskedString` supports concatenation (which allocates). `MaskedData<T>` converts to `T` but requires an explicit codec when constructed. Arithmetic preserves the masked operand's authoring snapshot.
 
 Masking uses reversible XOR operations. `GuardedValue<T>` adds non-cryptographic integrity checks to detect ordinary memory overwrites. Keys and masked values remain in the same process; code patches, key extraction, valid snapshot replay, full erasure to the default state, and changes through legitimate APIs remain possible. Authoritative game state should be validated by the server.
 
@@ -114,7 +117,7 @@ dotnet run --project 'Tests~/SmokeTests/SmokeTests.csproj' --configuration Relea
 With Node.js/npm and PowerShell installed, validate the package and build the same tarball layout used by OpenUPM:
 
 ```powershell
-& './Tools~/validate-package.ps1' -Tag v1.1.0
+& './Tools~/validate-package.ps1' -Tag v1.2.0
 & './Tools~/pack.ps1'
 ```
 

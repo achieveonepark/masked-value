@@ -8,6 +8,12 @@ using UnityEngine.UIElements;
 namespace Achieve.MaskedValues.Editor
 {
     [CustomPropertyDrawer(typeof(MaskedValueFieldAttribute))]
+#if UNITY_6000_0_OR_NEWER
+    [CustomPropertyDrawer(typeof(MaskedValue<>))]
+    [CustomPropertyDrawer(typeof(GuardedValue<>))]
+    [CustomPropertyDrawer(typeof(MaskedString))]
+    [CustomPropertyDrawer(typeof(MaskedData<>))]
+#endif
     internal sealed class MaskedValueFieldDrawer : PropertyDrawer
     {
         [ThreadStatic] private static int nativeDrawing;
@@ -28,23 +34,38 @@ namespace Achieve.MaskedValues.Editor
 
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {
-            var view = new IMGUIContainer(() =>
+            IMGUIContainer view = null;
+            view = new IMGUIContainer(() =>
             {
                 if (property.serializedObject.targetObject == null) return;
                 property.serializedObject.UpdateIfRequiredOrScript();
-                var label = new GUIContent(property.displayName, property.tooltip);
-                float height = GetPropertyHeight(property, label);
-                Rect rect = EditorGUILayout.GetControlRect(false, height);
-                EditorGUI.BeginChangeCheck();
-                bool changed;
-                toolkitDrawing++;
-                try { OnGUI(rect, property, label); }
+                bool previousWideMode = EditorGUIUtility.wideMode;
+                float previousLabelWidth = EditorGUIUtility.labelWidth;
+                float width = view.contentRect.width;
+                EditorGUIUtility.wideMode = width >= 340f;
+                EditorGUIUtility.labelWidth = Mathf.Clamp(width * 0.4f, 120f, 180f);
+                try
+                {
+                    string displayName = fieldInfo?.GetCustomAttribute<InspectorNameAttribute>()?.displayName;
+                    var label = new GUIContent(displayName ?? property.displayName, property.tooltip);
+                    float height = GetPropertyHeight(property, label);
+                    Rect rect = EditorGUILayout.GetControlRect(false, height);
+                    EditorGUI.BeginChangeCheck();
+                    bool changed;
+                    toolkitDrawing++;
+                    try { OnGUI(rect, property, label); }
+                    finally
+                    {
+                        toolkitDrawing--;
+                        changed = EditorGUI.EndChangeCheck();
+                    }
+                    if (changed && !IsRuntime(property)) property.serializedObject.ApplyModifiedProperties();
+                }
                 finally
                 {
-                    toolkitDrawing--;
-                    changed = EditorGUI.EndChangeCheck();
+                    EditorGUIUtility.wideMode = previousWideMode;
+                    EditorGUIUtility.labelWidth = previousLabelWidth;
                 }
-                if (changed && !IsRuntime(property)) property.serializedObject.ApplyModifiedProperties();
             });
             // Only attached, visible Inspectors are scheduled by UI Toolkit.
             view.schedule.Execute(() =>
@@ -60,7 +81,8 @@ namespace Achieve.MaskedValues.Editor
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            if (nativeDrawing != 0 || !IsRuntime(property)) return NativeHeight(property, label);
+            if (nativeDrawing != 0) return NativeHeight(property, label);
+            if (!IsRuntime(property)) return NativeHeight(InitialProperty(property), label);
             if (property.serializedObject.isEditingMultipleObjects || faults.ContainsKey(Key(property))) return ErrorHeight;
             try
             {
@@ -75,9 +97,16 @@ namespace Achieve.MaskedValues.Editor
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
-            if (nativeDrawing != 0 || !IsRuntime(property))
+            if (nativeDrawing != 0)
             {
                 DrawNative(position, property, label);
+                return;
+            }
+            if (!IsRuntime(property))
+            {
+                SerializedProperty initial = InitialProperty(property);
+                DrawNative(position, initial, label);
+                property.isExpanded = initial.isExpanded;
                 return;
             }
             if (property.serializedObject.isEditingMultipleObjects)
@@ -122,11 +151,13 @@ namespace Achieve.MaskedValues.Editor
             }
         }
 
-        private Preview CreatePreview(SerializedProperty property)
+        internal Preview CreatePreview(SerializedProperty property)
         {
-            if (property.isArray || property.isFixedBuffer || property.propertyType == SerializedPropertyType.ManagedReference)
+            SerializedProperty initial = InitialProperty(property);
+            if ((initial.isArray && initial.propertyType != SerializedPropertyType.String) ||
+                initial.isFixedBuffer || initial.propertyType == SerializedPropertyType.ManagedReference)
                 throw new NotSupportedException("Bind a single serialized value. Array/list roots, fixed buffers and SerializeReference are not supported.");
-            if (fieldInfo != null && fieldInfo.FieldType != Binding(property).ValueType(property.serializedObject.targetObject))
+            if (attribute is MaskedValueFieldAttribute && fieldInfo != null && fieldInfo.FieldType != Binding(property).ValueType(property.serializedObject.targetObject))
                 throw new InvalidOperationException("The initial field and the masked Value must have the same type.");
             string key = Key(property);
             MaskedValueBinding binding = Binding(property);
@@ -152,10 +183,20 @@ namespace Achieve.MaskedValues.Editor
             string path = property.propertyPath;
             if (!bindings.TryGetValue(path, out MaskedValueBinding binding))
             {
-                binding = new MaskedValueBinding(path, ((MaskedValueFieldAttribute)attribute).RuntimeFieldName);
+                binding = attribute is MaskedValueFieldAttribute marker
+                    ? new MaskedValueBinding(path, marker.RuntimeFieldName) : MaskedValueBinding.ForPath(path);
                 bindings.Add(path, binding);
             }
             return binding;
+        }
+
+        private SerializedProperty InitialProperty(SerializedProperty property)
+        {
+            if (attribute is MaskedValueFieldAttribute) return property;
+            SerializedProperty initial = property.FindPropertyRelative("initialValue");
+            if (initial == null) throw new InvalidOperationException("The serialized initial value was not found.");
+            initial.isExpanded = property.isExpanded;
+            return initial;
         }
 
         private void RememberFault(SerializedProperty property, Exception exception)
@@ -209,7 +250,9 @@ namespace Achieve.MaskedValues.Editor
             internal Preview(Type type, object value)
             {
                 host = ScriptableObject.CreateInstance<MaskedValuePreviewHost>();
-                host.hideFlags = HideFlags.HideAndDontSave;
+                // HideAndDontSave includes NotEditable, which would disable
+                // native controls even though this is an editing buffer.
+                host.hideFlags = HideFlags.HideAndDontSave & ~HideFlags.NotEditable;
                 Type boxType = typeof(MaskedValuePreviewBox<>).MakeGenericType(type);
                 host.box = Activator.CreateInstance(boxType);
                 valueField = boxType.GetField("value");

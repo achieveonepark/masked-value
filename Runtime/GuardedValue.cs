@@ -9,15 +9,26 @@ namespace Achieve.MaskedValues
     /// it is not cryptographic authentication or protection against code patches.
     /// Like MaskedValue, instances require external synchronization across threads.
     /// </summary>
-    public unsafe struct GuardedValue<T> where T : unmanaged
+    [Serializable]
+    public unsafe partial struct GuardedValue<T> where T : unmanaged
     {
         // Access masked storage only as bytes: it can be an invalid T representation.
-        private T storage;
-        private ulong key;
-        private ulong tag;
+        [NonSerialized] private T storage;
+#if UNITY_6000_0_OR_NEWER
+        [UnityEngine.SerializeField] private T initialValue;
+#endif
+        [NonSerialized] private ulong key;
+        [NonSerialized] private ulong tag;
 
         public GuardedValue(T value)
         {
+#if UNITY_6000_0_OR_NEWER
+#if UNITY_EDITOR
+            initialValue = value;
+#else
+            initialValue = default;
+#endif
+#endif
             storage = default;
             key = 0;
             tag = 0;

@@ -11,6 +11,7 @@
     <Compile Include="../../Runtime/*.cs" />
     <Compile Include="../../Samples~/ClassFields/PlayerProfileCodec.cs" />
     <Compile Include="../Verification/VerificationSuite.cs" />
+    <Compile Include="../Verification/OperatorVerification.cs" />
     <Compile Include="../../Editor/MaskedValueBinding.cs" />
     <Compile Include="../Verification/InspectorBindingVerification.cs" />
     <Compile Include="Program.cs" />
