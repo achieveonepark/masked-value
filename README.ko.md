@@ -9,7 +9,7 @@
 Package Manager → **+ → Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.2.0
+https://github.com/achieveonepark/masked-value.git#v1.0.0
 ```
 
 [OpenUPM](https://openupm.com/packages/com.achieve.masked-values/) 등록이 완료되면 Unity 프로젝트 폴더에서 다음 명령으로도 설치할 수 있습니다.

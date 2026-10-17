@@ -11,7 +11,7 @@ Low-allocation runtime value masking and optional lightweight tamper detection f
 In **Window > Package Manager**, choose **+ > Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.2.0
+https://github.com/achieveonepark/masked-value.git#v1.0.0
 ```
 
 ### OpenUPM
@@ -34,7 +34,7 @@ Alternatively, add the following scoped registry and dependency to your project'
     }
   ],
   "dependencies": {
-    "com.achieve.masked-values": "1.2.0"
+    "com.achieve.masked-values": "1.0.0"
   }
 }
 ```
@@ -96,6 +96,8 @@ health++;
 
 `MaskedString` supports concatenation (which allocates). `MaskedData<T>` converts to `T` but requires an explicit codec when constructed. Arithmetic preserves the masked operand's authoring snapshot.
 
+Existing `.Value`, implicit conversions, integrity/Try APIs, and runtime-only initialization remain available. Explicit arithmetic returns a wrapper, so `var result = health + 10` infers `GuardedValue<int>`; use `int result = health + 10` or `health.Value + 10` when you need a plain number, including for generic APIs or formatting. Unity 6 also adds authoring serialization; use `[NonSerialized]` on fields that must remain runtime-only.
+
 Masking uses reversible XOR operations. `GuardedValue<T>` adds non-cryptographic integrity checks to detect ordinary memory overwrites. Keys and masked values remain in the same process; code patches, key extraction, valid snapshot replay, full erasure to the default state, and changes through legitimate APIs remain possible. Authoritative game state should be validated by the server.
 
 Unmanaged reads, writes, and guarded remasking allocate no managed memory after initialization. Strings and codec-backed data can allocate. Operation cost and storage grow with the value size; measure on your target platform.
@@ -117,7 +119,7 @@ dotnet run --project 'Tests~/SmokeTests/SmokeTests.csproj' --configuration Relea
 With Node.js/npm and PowerShell installed, validate the package and build the same tarball layout used by OpenUPM:
 
 ```powershell
-& './Tools~/validate-package.ps1' -Tag v1.2.0
+& './Tools~/validate-package.ps1' -Tag v1.0.0
 & './Tools~/pack.ps1'
 ```
 

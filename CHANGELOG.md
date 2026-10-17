@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0 - 2026-10-17
+## 1.0.0 - 2026-10-17
 
 - Unity 6: declare `GuardedValue<T>`, `MaskedValue<T>`, `MaskedString`, and codec-backed `MaskedData<T>` directly in the Inspector. No companion field, linking attribute, or initialization method is required.
 - Native row heights and controls for authoring initial values and viewing/editing live values. Plain fields in arrays and nested structs are supported.
@@ -9,18 +9,12 @@
 - Explicit arithmetic, compound assignment, remainder, unary, and increment/decrement operators for 12 numeric types, with guarded/masked combinations and string concatenation. Guarded operands still validate integrity.
 - Preserve the optional attribute bridge for Unity 2022.3 and custom initialization. Automatic struct serialization uses Unity 6 callbacks.
 - Verify numeric operators and warm zero allocations, Unity serialization/Undo, direct field/array editing, and the original behavior suite.
-
-## 1.1.0 - 2026-10-17
-
-- Optional `[MaskedValueField]` Inspector bridge: persist normal initial values in Edit mode and view/edit masked values in Play mode.
-- Separate Unity attribute and Editor assemblies; existing runtime wrapper source, layouts, and read/write paths are unchanged.
+- Optional `[MaskedValueField]` bridge for separate initial values and custom runtime initialization.
+- Separate Unity attribute and Editor assemblies; core gameplay getters/setters retain their existing paths.
 - Support private inherited fields, nested structs and collection owners, strings, Unity values, and serializable codec-backed data.
 - Isolated native editing buffers handle delayed controls without saving current values into scenes or prefabs. Runtime edits preserve nonserialized state and changes to untouched fields.
 - Inspector Fields sample, usage guide, binding tests, and actual Unity serialization/Undo checks.
-
-## 1.0.0 - 2026-10-17
-
-- First public release, including the masking and optional integrity-checking APIs developed in 0.1.0 and 0.2.0.
+- First public release, consolidating Inspector support and operators with the masking and integrity-checking APIs developed in 0.1.0 and 0.2.0.
 - MIT license, Unity package metadata, and OpenUPM submission metadata.
 - English README with a separate Korean translation.
 - Consistent distribution contents for local and OpenUPM packaging, including documentation, samples, and the AI skill.

@@ -40,13 +40,13 @@ Read/write costs and wrapper size increase with the struct size. String Value an
 
 Unity 6000.5.10f1의 실제 .NET Standard 2.1 및 엔진 참조 DLL을 사용한 런타임·샘플·검증 코드 컴파일을 통과했습니다. 위 수치는 2026-10-08의 .NET 측정 결과이며, IL2CPP·모바일 기기의 실행 및 성능은 별도 검증이 필요합니다.
 
-## Inspector 지원 검증 (1.1.0)
+## 선택적 Inspector 연결 검증
 
 2026-10-17에 Unity 6000.5.10f1을 배치 모드로 실제 실행하여 기존 170,628개 assertion과 초기값·런타임 값 분리, 직렬화 편집 버퍼, Undo를 확인했습니다. 런타임 코어의 기존 소스와 구조체 배치는 변경하지 않았으며 정상 경로의 워밍업 후 GC 할당은 계속 0바이트였습니다.
 
 Inspector의 리플렉션·박싱·버퍼는 Editor 어셈블리에만 있습니다. Inspector를 열어 둔 Editor에서는 그 처리 비용과 문자열/codec getter의 할당이 추가될 수 있습니다. 플레이어용 샘플 컴파일에서 Inspector 특성이 메타데이터에서 제외됨도 확인합니다. 실제 Inspector 창의 마우스 조작·시각적 검증, Unity 2022.3 실행, IL2CPP 실행은 별도 확인이 필요합니다.
 
-## 직접 Inspector 지원과 연산자 검증 (1.2.0)
+## 직접 Inspector 지원과 연산자 검증 (1.0.0)
 
 2026-10-17, Unity 6000.5.10f1에서 기존 170,628개 검사, 직접 선언한 필드의 초기값 저장·복원·Undo, 문자열/구조체/명시적 codec, 배열 요소 편집을 실제 실행했습니다. 숫자 12종의 사칙연산·나머지·복합 대입·증감, guarded/masked 조합, 변조된 피연산자의 거부와 정상 연산 워밍업 후 GC 0바이트를 .NET과 Unity에서 확인했습니다.
 
