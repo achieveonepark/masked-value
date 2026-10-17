@@ -6,7 +6,7 @@ Unity에서 클래스 필드의 실제 값을 그대로 보관하지 않도록 �
 
 Unity 2022.3 이상에서 `Window > Package Manager > + > Add package from disk`를 선택하고 이 폴더의 `package.json`을 지정합니다. Samples 탭에서 **Class Fields** 예제를 가져올 수 있습니다. 외부 서버나 추가 패키지는 필요 없습니다.
 
-배포용 `com.achieve.masked-values-0.2.0.tgz`는 `+ > Add package from tarball`로 설치할 수 있습니다. [Unity 설치 문서](https://docs.unity3d.com/2022.3/Documentation/Manual/upm-ui-tarball.html)
+배포용 `com.achieve.masked-values-1.0.0.tgz`는 `+ > Add package from tarball`로 설치할 수 있습니다. [Unity 설치 문서](https://docs.unity3d.com/2022.3/Documentation/Manual/upm-ui-tarball.html)
 
 ```csharp
 using System;

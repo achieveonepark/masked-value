@@ -1,0 +1,33 @@
+name: Validate package
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Validate manifest, package contents, and release tag
+        shell: pwsh
+        run: |
+          $releaseTag = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME } else { '' }
+          & './Tools~/validate-package.ps1' -Tag $releaseTag
+      - name: Run behavior and allocation verification
+        run: dotnet run --project 'Tests~/SmokeTests/SmokeTests.csproj' --configuration Release
+      - name: Pack distribution
+        shell: pwsh
+        run: "& './Tools~/pack.ps1'"

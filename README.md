@@ -1,16 +1,45 @@
 # Masked Values
 
-런타임 값 은닉과 선택적 변조 감지를 제공하는 Unity 패키지입니다. XOR 기반 값 은닉이며 암호학적 보안 기능은 아닙니다.
+[한국어](README.ko.md)
 
-## 설치
+Low-allocation runtime value masking and optional lightweight tamper detection for **Unity 2022.3 or later**. Supports unmanaged values, strings, and reference-containing data through explicit codecs. No external package dependencies.
 
-Unity **2022.3 이상**에서 Package Manager → **+ → Add package from git URL**:
+## Installation
+
+### Git URL
+
+In **Window > Package Manager**, choose **+ > Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git
+https://github.com/achieveonepark/masked-value.git#v1.0.0
 ```
 
-## 사용
+### OpenUPM
+
+Once the package is listed on [OpenUPM](https://openupm.com/packages/com.achieve.masked-values/), run this in your Unity project with the [OpenUPM CLI](https://openupm.com/docs/getting-started-cli.html):
+
+```sh
+openupm add com.achieve.masked-values
+```
+
+Alternatively, add the following scoped registry and dependency to your project's `Packages/manifest.json`. Merge these entries with your existing configuration:
+
+```json
+{
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.achieve.masked-values"]
+    }
+  ],
+  "dependencies": {
+    "com.achieve.masked-values": "1.0.0"
+  }
+}
+```
+
+## Quick start
 
 ```csharp
 using System;
@@ -32,12 +61,48 @@ public sealed class PlayerState : MonoBehaviour
 }
 ```
 
-`MaskedValue<T>`는 `unmanaged` 값을 은닉하고, `GuardedValue<T>`는 무결성 검사도 수행합니다. 문자열은 `MaskedString`, 참조를 포함한 데이터는 `MaskedData<T>`와 명시적 codec을 사용합니다. Unity 직렬화에는 사용하지 않습니다.
+| Type | Use |
+| --- | --- |
+| `MaskedValue<T>` | Mask primitives, enums, and unmanaged structs. |
+| `GuardedValue<T>` | Mask unmanaged values and validate integrity on reads, writes, and explicit remasking. |
+| `MaskedString` | Mask strings; use `CopyTo` and `ValueEquals` to avoid allocating on reads. |
+| `MaskedData<T>` | Mask reference-containing data with an explicit `ISpanValueCodec<T>`. |
 
-샘플: Package Manager의 **Class Fields**를 Import합니다.
+For guarded values, `TryGetValue`, `TrySetValue`, `CheckIntegrity`, and `TryRefreshMask` return `false` when validation fails. The `Value` getter/setter and `RefreshMask` throw `InvalidOperationException` on failed checks. Call `RefreshMask()` explicitly to change the masked representation while keeping the value.
 
-자세한 API·제약은 [사용 가이드](Documentation~/masked-values.md), 성능 측정은 [성능 문서](Documentation~/Performance.md)를 참고하세요.
+Import **Class Fields** from the package's **Samples** tab in Package Manager for a complete example.
 
-## AI 스킬
+## Runtime behavior and limits
 
-스킬 원본은 [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md)에 있습니다. Unity Skill Manager가 프로젝트의 `.agents/skills`와 `.claude/skills`에 취합합니다. 직접 호출: Codex `$achieve-masked-values`, Claude Code `/achieve-masked-values`.
+These types are runtime-only. Use `[NonSerialized]` on Unity component fields and initialize them in `Awake` or another runtime entry point. They do not provide Inspector editing, Unity serialization, save-file persistence, or restoration after a domain reload. Synchronize concurrent access externally.
+
+Masking uses reversible XOR operations. `GuardedValue<T>` adds non-cryptographic integrity checks to detect ordinary memory overwrites. Keys and masked values remain in the same process; code patches, key extraction, valid snapshot replay, full erasure to the default state, and changes through legitimate APIs remain possible. Authoritative game state should be validated by the server.
+
+Unmanaged reads, writes, and guarded remasking allocate no managed memory after initialization. Strings and codec-backed data can allocate. Operation cost and storage grow with the value size; measure on your target platform.
+
+See the [detailed usage guide (Korean)](Documentation~/masked-values.md) and [performance measurements](Documentation~/Performance.md) for API details and verification limits.
+
+## AI skill
+
+The package includes [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md). Unity Skill Manager collects it into the project's `.agents/skills` and `.claude/skills`. Invoke it with `$achieve-masked-values` in Codex or `/achieve-masked-values` in Claude Code.
+
+## Development
+
+Run the behavior and allocation checks with the .NET 8 SDK:
+
+```sh
+dotnet run --project 'Tests~/SmokeTests/SmokeTests.csproj' --configuration Release
+```
+
+With Node.js/npm and PowerShell installed, validate the package and build the same tarball layout used by OpenUPM:
+
+```powershell
+& './Tools~/validate-package.ps1' -Tag v1.0.0
+& './Tools~/pack.ps1'
+```
+
+The archive is written to `Artifacts~/`. Tests, tools, CI configuration, and generated artifacts are excluded. See the [release guide](https://github.com/achieveonepark/masked-value/blob/main/.github/RELEASING.md) for tagging and OpenUPM submission, and the [Unity verification project](https://github.com/achieveonepark/masked-value/blob/main/Tests~/UnityProject/README.md) for Editor checks.
+
+## License
+
+[MIT](LICENSE.md) © 2026 achieveonepark.

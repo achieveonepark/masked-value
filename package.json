@@ -1,10 +1,42 @@
 {
   "name": "com.achieve.masked-values",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "displayName": "Masked Values",
   "description": "Low-allocation runtime value masking and optional lightweight tamper detection for Unity. Not cryptographic encryption or authentication.",
   "unity": "2022.3",
+  "license": "MIT",
+  "author": {
+    "name": "achieveonepark",
+    "url": "https://github.com/achieveonepark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/achieveonepark/masked-value.git"
+  },
+  "bugs": {
+    "url": "https://github.com/achieveonepark/masked-value/issues"
+  },
+  "homepage": "https://github.com/achieveonepark/masked-value#readme",
+  "documentationUrl": "https://github.com/achieveonepark/masked-value/blob/main/README.md",
+  "changelogUrl": "https://github.com/achieveonepark/masked-value/blob/main/CHANGELOG.md",
+  "licensesUrl": "https://github.com/achieveonepark/masked-value/blob/main/LICENSE.md",
   "keywords": ["memory", "masking", "values", "performance", "integrity"],
+  "files": [
+    "Runtime/",
+    "Runtime.meta",
+    "Samples~/",
+    "Documentation~/",
+    "Skills~/",
+    "README.md",
+    "README.md.meta",
+    "README.ko.md",
+    "README.ko.md.meta",
+    "CHANGELOG.md",
+    "CHANGELOG.md.meta",
+    "LICENSE.md",
+    "LICENSE.md.meta",
+    "package.json.meta"
+  ],
   "samples": [
     {
       "displayName": "Class Fields",

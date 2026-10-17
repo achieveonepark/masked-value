@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0 - 2026-10-17
+
+- First public release, including the masking and optional integrity-checking APIs developed in 0.1.0 and 0.2.0.
+- MIT license, Unity package metadata, and OpenUPM submission metadata.
+- English README with a separate Korean translation.
+- Consistent distribution contents for local and OpenUPM packaging, including documentation, samples, and the AI skill.
+- CI validation of package contents, behavior, allocations, and matching release tags.
+
 ## 0.2.0
 
 - Optional unmanaged `GuardedValue<T>` with allocation-free integrity checks on reads, writes and remasking, preserving the original `MaskedValue<T>` implementation.
