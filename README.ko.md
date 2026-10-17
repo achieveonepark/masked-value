@@ -9,7 +9,7 @@
 Package Manager → **+ → Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.0.0
+https://github.com/achieveonepark/masked-value.git#v1.1.0
 ```
 
 [OpenUPM](https://openupm.com/packages/com.achieve.masked-values/) 등록이 완료되면 Unity 프로젝트 폴더에서 다음 명령으로도 설치할 수 있습니다.
@@ -57,6 +57,23 @@ public sealed class PlayerState : MonoBehaviour
 ## AI 스킬
 
 스킬 원본은 [`Skills~/achieve-masked-values`](Skills~/achieve-masked-values/SKILL.md)에 있습니다. Unity Skill Manager가 프로젝트의 `.agents/skills`와 `.claude/skills`에 취합합니다. 직접 호출: Codex `$achieve-masked-values`, Claude Code `/achieve-masked-values`.
+
+## Inspector 지원
+
+직렬화할 초기값 필드에 `[MaskedValueField]`를 붙이고 런타임 필드 이름을 지정합니다.
+
+```csharp
+[SerializeField, MaskedValueField(nameof(health))]
+private int initialHealth = 100;
+
+[NonSerialized] private GuardedValue<int> health;
+
+private void Awake() => health = initialHealth;
+```
+
+편집 모드에서는 초기값을 설정하고 씬·프리팹에 저장할 수 있습니다. 플레이 중에는 같은 위치에서 현재 `health.Value`를 확인하고 수정하며, 이 변경은 플레이 종료 후 유지되지 않습니다. 런타임 타입과 읽기·쓰기 경로는 그대로이며 리플렉션과 편집 버퍼는 Editor 어셈블리에만 있습니다.
+
+Package Manager에서 **Inspector Fields** 샘플을 가져올 수 있습니다. 세부 설정과 제약은 [Inspector 가이드](Documentation~/Inspector.md)를 참고하세요. 초기값은 일반 직렬화 데이터이므로 씬·프리팹·빌드에 평문으로 저장됩니다.
 
 ## 개발 및 라이선스
 

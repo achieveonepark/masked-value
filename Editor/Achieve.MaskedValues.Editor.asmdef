@@ -1,0 +1,7 @@
+{
+  "name": "Achieve.MaskedValues.Editor",
+  "rootNamespace": "Achieve.MaskedValues.Editor",
+  "references": ["Achieve.MaskedValues", "Achieve.MaskedValues.Unity"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": true
+}

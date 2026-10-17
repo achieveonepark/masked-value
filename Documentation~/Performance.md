@@ -1,6 +1,6 @@
 # Masked Values verification
 
-Passed 170628 assertions. No reflection or automatic serialization is used by the package.
+Passed 170628 assertions. No reflection or automatic serialization is used by the core runtime.
 Measured managed allocation after warmup: masked/guarded primitive and struct read-write, guarded refresh and failed TryGetValue, string CopyTo/ValueEquals, and codec CopyTo: 0 bytes.
 
 Release, single thread, median of 7 samples, 1,000,000 iterations per sample. These are this machine's measurements, not a zero-overhead guarantee.
@@ -38,4 +38,10 @@ Read/write costs and wrapper size increase with the struct size. String Value an
 
 패키지 런타임에는 리플렉션이 없습니다. 검증 코드만 의도적인 손상을 만들기 위해 private 필드를 변경합니다.
 
-Unity 6000.5.10f1의 실제 .NET Standard 2.1 및 엔진 참조 DLL을 사용한 런타임·샘플·검증 코드 컴파일을 통과했습니다. 이번 변경에서는 Unity Editor 실행, Cheat Engine을 사용한 실제 게임 실험, IL2CPP·모바일 기기의 실행 및 성능은 검증하지 않았습니다. 이전 Editor 실행은 라이선스 확인 실패로 수행하지 못했습니다.
+Unity 6000.5.10f1의 실제 .NET Standard 2.1 및 엔진 참조 DLL을 사용한 런타임·샘플·검증 코드 컴파일을 통과했습니다. 위 수치는 2026-10-08의 .NET 측정 결과이며, IL2CPP·모바일 기기의 실행 및 성능은 별도 검증이 필요합니다.
+
+## Inspector 지원 검증 (1.1.0)
+
+2026-10-17에 Unity 6000.5.10f1을 배치 모드로 실제 실행하여 기존 170,628개 assertion과 초기값·런타임 값 분리, 직렬화 편집 버퍼, Undo를 확인했습니다. 런타임 코어의 기존 소스와 구조체 배치는 변경하지 않았으며 정상 경로의 워밍업 후 GC 할당은 계속 0바이트였습니다.
+
+Inspector의 리플렉션·박싱·버퍼는 Editor 어셈블리에만 있습니다. Inspector를 열어 둔 Editor에서는 그 처리 비용과 문자열/codec getter의 할당이 추가될 수 있습니다. 플레이어용 샘플 컴파일에서 Inspector 특성이 메타데이터에서 제외됨도 확인합니다. 실제 Inspector 창의 마우스 조작·시각적 검증, Unity 2022.3 실행, IL2CPP 실행은 별도 확인이 필요합니다.

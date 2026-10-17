@@ -26,6 +26,8 @@ $taskRuntimeSources = @(Get-ChildItem -LiteralPath (Join-Path $taskRoot 'Runtime
 $taskSources = $taskRuntimeSources + @(
     (Join-Path $taskRoot 'Samples~\ClassFields\PlayerProfileCodec.cs'),
     (Join-Path $taskRoot 'Tests~\Verification\VerificationSuite.cs'),
+    (Join-Path $taskRoot 'Editor\MaskedValueBinding.cs'),
+    (Join-Path $taskRoot 'Tests~\Verification\InspectorBindingVerification.cs'),
     (Join-Path $taskRoot 'Tests~\SmokeTests\Program.cs')
 )
 $taskExecutable = Join-Path $taskArtifacts 'SmokeTests.dll'
@@ -53,9 +55,37 @@ $taskUnityReferences = @(
     ('-r:' + (Join-Path $taskUnityData 'Managed\UnityEngine\UnityEngine.CoreModule.dll')),
     ('-r:' + (Join-Path $taskUnityData 'Managed\UnityEngine\UnityEditor.CoreModule.dll'))
 )
+$taskUnityIntegrationAssembly = Join-Path $taskArtifacts 'Achieve.MaskedValues.Unity.dll'
+$taskUnityIntegrationSources = @(Get-ChildItem -LiteralPath (Join-Path $taskRoot 'Runtime\Unity') -Filter '*.cs' |
+    ForEach-Object { $_.FullName })
+& $taskDotnet exec $taskCompiler -nologo -noconfig -nostdlib+ -optimize+ -langversion:9 -target:library "-out:$taskUnityIntegrationAssembly" $taskUnityReferences $taskUnityIntegrationSources
+if ($LASTEXITCODE -ne 0) { throw 'Unity Inspector attribute compilation failed.' }
+
+$taskPlayerSampleAssembly = Join-Path $taskArtifacts 'Achieve.MaskedValues.PlayerSample.dll'
+$taskPlayerSampleReferences = $taskUnityReferences + @('-r:' + $taskUnityIntegrationAssembly)
+$taskPlayerSampleSource = Join-Path $taskRoot 'Samples~\InspectorFields\InspectorFieldsExample.cs'
+& $taskDotnet exec $taskCompiler -nologo -noconfig -nostdlib+ -optimize+ -langversion:9 -target:library "-out:$taskPlayerSampleAssembly" $taskPlayerSampleReferences $taskPlayerSampleSource
+if ($LASTEXITCODE -ne 0) { throw 'Player Inspector sample compilation failed.' }
+if ([System.Text.Encoding]::UTF8.GetString([System.IO.File]::ReadAllBytes($taskPlayerSampleAssembly)).Contains('MaskedValueFieldAttribute')) {
+    throw 'The Inspector attribute must be omitted from player metadata.'
+}
+
+$taskInspectorAssembly = Join-Path $taskArtifacts 'Achieve.MaskedValues.Editor.dll'
+$taskInspectorReferences = $taskUnityReferences + @(
+    ('-r:' + $taskUnityIntegrationAssembly),
+    ('-r:' + (Join-Path $taskUnityData 'Managed\UnityEngine\UnityEngine.IMGUIModule.dll')),
+    ('-r:' + (Join-Path $taskUnityData 'Managed\UnityEngine\UnityEngine.UIElementsModule.dll'))
+    ('-r:' + (Join-Path $taskUnityData 'Managed\UnityEngine\UnityEngine.JSONSerializeModule.dll'))
+)
+$taskInspectorSources = @(Get-ChildItem -LiteralPath (Join-Path $taskRoot 'Editor') -Filter '*.cs' |
+    ForEach-Object { $_.FullName })
+& $taskDotnet exec $taskCompiler -nologo -noconfig -nostdlib+ -optimize+ -langversion:9 -target:library "-out:$taskInspectorAssembly" $taskInspectorReferences $taskInspectorSources
+if ($LASTEXITCODE -ne 0) { throw 'Unity Inspector drawer compilation failed.' }
+
+$taskUnityReferences = $taskInspectorReferences + @('-r:' + $taskInspectorAssembly)
 $taskVerificationSources = @(Get-ChildItem -LiteralPath (Join-Path $taskRoot 'Tests~\UnityProject\Assets\Editor') -Filter '*.cs' |
     ForEach-Object { $_.FullName })
 $taskVerificationAssembly = Join-Path $taskArtifacts 'Achieve.MaskedValues.Verification.dll'
-& $taskDotnet exec $taskCompiler -nologo -noconfig -nostdlib+ -unsafe+ -optimize+ -langversion:9 -target:library "-out:$taskVerificationAssembly" $taskUnityReferences $taskVerificationSources
+& $taskDotnet exec $taskCompiler -nologo -noconfig -nostdlib+ -unsafe+ -optimize+ -langversion:9 -define:UNITY_EDITOR -target:library "-out:$taskVerificationAssembly" $taskUnityReferences $taskVerificationSources
 if ($LASTEXITCODE -ne 0) { throw 'Unity API sample/verification compilation failed.' }
 Write-Output 'Unity .NET Standard 2.1 runtime and sample compilation passed.'

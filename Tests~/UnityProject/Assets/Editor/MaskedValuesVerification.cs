@@ -11,6 +11,8 @@ public static class MaskedValuesVerification
     {
         try
         {
+            InspectorBindingVerification.Run();
+            InspectorUnityVerification.Run();
             var vector = new MaskedValue<Vector3>(new Vector3(1, 2, 3));
             if (vector.Value != new Vector3(1, 2, 3)) throw new Exception("Vector3 mismatch");
             var quaternion = new MaskedValue<Quaternion>(Quaternion.Euler(1, 2, 3));

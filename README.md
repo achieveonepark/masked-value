@@ -11,7 +11,7 @@ Low-allocation runtime value masking and optional lightweight tamper detection f
 In **Window > Package Manager**, choose **+ > Add package from git URL**:
 
 ```text
-https://github.com/achieveonepark/masked-value.git#v1.0.0
+https://github.com/achieveonepark/masked-value.git#v1.1.0
 ```
 
 ### OpenUPM
@@ -34,7 +34,7 @@ Alternatively, add the following scoped registry and dependency to your project'
     }
   ],
   "dependencies": {
-    "com.achieve.masked-values": "1.0.0"
+    "com.achieve.masked-values": "1.1.0"
   }
 }
 ```
@@ -72,9 +72,26 @@ For guarded values, `TryGetValue`, `TrySetValue`, `CheckIntegrity`, and `TryRefr
 
 Import **Class Fields** from the package's **Samples** tab in Package Manager for a complete example.
 
+## Inspector support
+
+Use `[MaskedValueField]` on a serialized initial value and point it at a sibling runtime masked field:
+
+```csharp
+[SerializeField, MaskedValueField(nameof(health))]
+private int initialHealth = 100;
+
+[NonSerialized] private GuardedValue<int> health;
+
+private void Awake() => health = initialHealth;
+```
+
+In Edit mode, the field edits the initial value with normal scene/prefab persistence and Undo. In Play mode, the same field shows and edits `health.Value`; changes are temporary. The runtime types and their read/write paths are unchanged. Reflection and editing buffers live in the Editor assembly.
+
+Import **Inspector Fields** for primitives, a Unity vector, a string, and a custom struct. See the [Inspector guide](Documentation~/Inspector.md) for assembly references, codec-backed data, performance, and limitations.
+
 ## Runtime behavior and limits
 
-These types are runtime-only. Use `[NonSerialized]` on Unity component fields and initialize them in `Awake` or another runtime entry point. They do not provide Inspector editing, Unity serialization, save-file persistence, or restoration after a domain reload. Synchronize concurrent access externally.
+The masked wrappers are runtime-only. Use `[NonSerialized]` on Unity component fields and initialize them in `Awake` or another runtime entry point. Inspector support persists separate initial values; masked storage, keys, and integrity tags are never serialized. The wrappers do not provide save-file persistence or restoration after a domain reload. Synchronize concurrent access externally.
 
 Masking uses reversible XOR operations. `GuardedValue<T>` adds non-cryptographic integrity checks to detect ordinary memory overwrites. Keys and masked values remain in the same process; code patches, key extraction, valid snapshot replay, full erasure to the default state, and changes through legitimate APIs remain possible. Authoritative game state should be validated by the server.
 
@@ -97,7 +114,7 @@ dotnet run --project 'Tests~/SmokeTests/SmokeTests.csproj' --configuration Relea
 With Node.js/npm and PowerShell installed, validate the package and build the same tarball layout used by OpenUPM:
 
 ```powershell
-& './Tools~/validate-package.ps1' -Tag v1.0.0
+& './Tools~/validate-package.ps1' -Tag v1.1.0
 & './Tools~/pack.ps1'
 ```
 

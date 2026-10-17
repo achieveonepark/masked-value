@@ -34,7 +34,7 @@ public static unsafe class MaskedValuesVerificationSuite
         var report = new StringBuilder();
         report.AppendLine("# Masked Values verification");
         report.AppendLine();
-        report.AppendLine("Passed " + assertions + " assertions. No reflection or automatic serialization is used by the package.");
+        report.AppendLine("Passed " + assertions + " assertions. No reflection or automatic serialization is used by the core runtime.");
         report.AppendLine("Measured managed allocation after warmup: masked/guarded primitive and struct read-write, guarded refresh and failed TryGetValue, string CopyTo/ValueEquals, and codec CopyTo: 0 bytes.");
         report.AppendLine();
         report.AppendLine("Release, single thread, median of 7 samples, 1,000,000 iterations per sample. These are this machine's measurements, not a zero-overhead guarantee.");

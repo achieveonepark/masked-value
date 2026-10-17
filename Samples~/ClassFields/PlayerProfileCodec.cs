@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using Achieve.MaskedValues;
 
+[Serializable]
 public struct PlayerProfile
 {
     public string name;

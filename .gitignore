@@ -5,3 +5,7 @@
 **/Logs/
 **/UserSettings/
 Artifacts~/
+Tests~/UnityProject/Assets/**/*.meta
+Tests~/UnityProject/Packages/packages-lock.json
+Tests~/UnityProject/ProjectSettings/*.asset
+Tests~/unity-verification.md

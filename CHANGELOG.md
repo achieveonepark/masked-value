@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0 - 2026-10-17
+
+- Optional `[MaskedValueField]` Inspector bridge: persist normal initial values in Edit mode and view/edit masked values in Play mode.
+- Separate Unity attribute and Editor assemblies; existing runtime wrapper source, layouts, and read/write paths are unchanged.
+- Support private inherited fields, nested structs and collection owners, strings, Unity values, and serializable codec-backed data.
+- Isolated native editing buffers handle delayed controls without saving current values into scenes or prefabs. Runtime edits preserve nonserialized state and changes to untouched fields.
+- Inspector Fields sample, usage guide, binding tests, and actual Unity serialization/Undo checks.
+
 ## 1.0.0 - 2026-10-17
 
 - First public release, including the masking and optional integrity-checking APIs developed in 0.1.0 and 0.2.0.

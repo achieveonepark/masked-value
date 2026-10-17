@@ -29,6 +29,10 @@ try {
             'README.ko.md', 'README.ko.md.meta', 'LICENSE.md', 'LICENSE.md.meta',
             'CHANGELOG.md', 'CHANGELOG.md.meta', 'Runtime.meta',
             'Runtime/Achieve.MaskedValues.asmdef', 'Runtime/Achieve.MaskedValues.asmdef.meta',
+            'Runtime/Unity/Achieve.MaskedValues.Unity.asmdef', 'Runtime/Unity/MaskedValueFieldAttribute.cs',
+            'Editor.meta', 'Editor/Achieve.MaskedValues.Editor.asmdef', 'Editor/MaskedValueFieldDrawer.cs',
+            'Samples~/InspectorFields/InspectorFieldsExample.cs',
+            'Documentation~/Inspector.md',
             'Samples~/ClassFields/MaskedFieldsExample.cs', 'Documentation~/masked-values.md',
             'Documentation~/Performance.md', 'Skills~/achieve-masked-values/SKILL.md',
             'Skills~/achieve-masked-values/references/package-guide.md')) {
@@ -38,7 +42,7 @@ try {
         if ($taskFile -match '(^|/)(Tests~|Tools~|Artifacts~|\.github|bin|obj|Library|Temp)(/|$)') {
             throw "Development file included in distribution: $taskFile"
         }
-        if ($taskFile -match '^Runtime/.*\.(cs|asmdef)$' -and $taskFiles -cnotcontains ($taskFile + '.meta')) {
+        if ($taskFile -match '^(Runtime|Editor)/.*\.(cs|asmdef)$' -and $taskFiles -cnotcontains ($taskFile + '.meta')) {
             throw "Missing Unity metadata: $taskFile.meta"
         }
     }
