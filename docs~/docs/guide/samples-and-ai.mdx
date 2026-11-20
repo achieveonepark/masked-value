@@ -1,0 +1,17 @@
+# Samples and AI coding tools
+
+## Samples
+
+Import samples from **Package Manager > Masked Values > Samples**:
+
+- **Class Fields** — runtime fields, guarded health, strings, structs, and a custom codec.
+- **Inspector Fields** — Unity 6 fields for health, speed, position, player name, and custom stats. Add `InspectorFieldsExample` to a GameObject.
+
+## Use with AI coding tools
+
+Copy the included `Skills~/achieve-masked-values` folder into your project's `.agents/skills/` for Codex or `.claude/skills/` for Claude Code. Unity Skill Manager can collect the packaged skill for you.
+
+- **Codex:** `$achieve-masked-values`
+- **Claude Code:** `/achieve-masked-values`
+
+The [package skill](https://github.com/achieveonepark/masked-value/blob/main/Skills~/achieve-masked-values/SKILL.md) guides field setup, Inspector use, memory and serialization limits, and a tamper listener that stops gameplay and requests shutdown on detection.

@@ -1,0 +1,64 @@
+# Masked Values
+
+Mask gameplay values in memory and detect ordinary memory tampering with `GuardedValue<T>`. The package supports numbers, unmanaged structs, strings, and data with custom codecs. It supports **Unity 2022.3 and later**, with automatic Inspector support in **Unity 6**, and has no external package dependencies.
+
+Masking makes simple plaintext searches harder; it is not encryption or complete anti-cheat protection. Keep authoritative online game state on the server.
+
+## Installation
+
+### Git URL
+
+In **Window > Package Manager**, select **+ > Add package from git URL** and enter:
+
+```text
+https://github.com/achieveonepark/masked-value.git#v1.0.1
+```
+
+### OpenUPM
+
+With the [OpenUPM CLI](https://openupm.com/docs/getting-started-cli.html), run this from your Unity project folder:
+
+```sh
+openupm add com.achieve.masked-values
+```
+
+To install through a scoped registry instead, merge these entries into `Packages/manifest.json`, preserving any existing registries and dependencies:
+
+```json
+{
+  "scopedRegistries": [
+    {
+      "name": "OpenUPM",
+      "url": "https://package.openupm.com",
+      "scopes": ["com.achieve.masked-values"]
+    }
+  ],
+  "dependencies": {
+    "com.achieve.masked-values": "1.0.1"
+  }
+}
+```
+
+## Quick start
+
+Add this component to a GameObject. In Unity 6, its fields also appear in the Inspector.
+
+```csharp
+using Achieve.MaskedValues;
+using UnityEngine;
+
+public sealed class PlayerState : MonoBehaviour
+{
+    public GuardedValue<int> health = 100;
+    public MaskedValue<float> moveSpeed = 5f;
+    public MaskedString playerName = "Player";
+
+    public void TakeDamage(int amount) => health -= amount;
+}
+```
+
+Choose a [value type](/guide/types-and-operations) based on whether integrity checks and custom codecs are needed. See the [Inspector guide](/guide/inspector) for Unity field behavior and [tampering guide](/guide/tampering) for handling failed integrity checks.
+
+## Compatibility and license
+
+The package is published as `com.achieve.masked-values` and licensed under [MIT](https://github.com/achieveonepark/masked-value/blob/main/LICENSE.md). For installation and source, see the [GitHub repository](https://github.com/achieveonepark/masked-value). A [Korean README](https://github.com/achieveonepark/masked-value/blob/main/README.ko.md) is also available.

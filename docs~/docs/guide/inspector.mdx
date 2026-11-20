@@ -1,0 +1,14 @@
+# Inspector
+
+In **Unity 6**, public fields work directly. Private fields use Unity's normal `[SerializeField]`. No companion initial-value field, linking attribute, or `Awake` is needed.
+
+| Mode | What you can do |
+| --- | --- |
+| Edit | Set initial values, save scenes/prefabs, and use Undo. |
+| Play | View and edit current values. Changes are discarded when Play mode ends. |
+
+For runtime-only component fields, use `[System.NonSerialized]`. For custom Inspector value structs, add `[System.Serializable]` and follow Unity serialization rules. Unity 2022.3 uses the optional `[MaskedValueField]` bridge instead of automatic fields.
+
+Unity 6 initial values remain plaintext configuration in memory and assets. Loading or cloning restores those defaults, not current gameplay state. `[NonSerialized]` is a serialization setting, not memory protection.
+
+See the package's detailed [Inspector guide](https://github.com/achieveonepark/masked-value/blob/main/Documentation~/Inspector.md) for the Unity 2022.3 example, assembly references, codec-backed fields, and additional serialization details. Browse the [Inspector Fields sample](https://github.com/achieveonepark/masked-value/tree/main/Samples~/InspectorFields) for a working Unity 6 example.

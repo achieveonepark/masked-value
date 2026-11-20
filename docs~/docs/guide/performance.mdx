@@ -1,0 +1,9 @@
+# Performance and limits
+
+Unmanaged value reads, writes, and remasking allocate no managed memory after initialization. String reads and assignments and custom codecs can allocate; larger structs also cost more memory and processing. Synchronize concurrent access yourself.
+
+`GuardedValue<T>` adds integrity checks to the masked value path. Choose it for unmanaged values that need those checks; use `MaskedValue<T>` when masking without integrity checks is sufficient. `RefreshMask()` is explicit and is not required on each read.
+
+Masking is not encryption or complete anti-cheat protection. Code patches, valid snapshot replay, and legitimate API writes remain possible. Unity 6 initial values remain plaintext configuration in memory and assets; loading or cloning restores defaults, not current gameplay values. `[NonSerialized]` does not provide memory protection.
+
+These are package-level characteristics, not a guarantee of zero overhead on every target. Measure the application's access patterns and target devices. For benchmark methodology and implementation details, see the [package performance notes](https://github.com/achieveonepark/masked-value/blob/main/Documentation~/Performance.md).

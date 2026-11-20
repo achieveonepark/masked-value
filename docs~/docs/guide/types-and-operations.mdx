@@ -1,0 +1,35 @@
+# Types and operations
+
+## Choose a type
+
+| Type | When to use it |
+| --- | --- |
+| `GuardedValue<T>` | Health, currency, or other unmanaged values that need masking and tamper detection. |
+| `MaskedValue<T>` | Numbers, enums, or unmanaged structs that need masking without integrity checks. |
+| `MaskedString` | Strings. Use `ValueEquals` to compare or `CopyTo` to read into a reusable buffer. |
+| `MaskedData<T>` | Data containing references; supply an explicit `ISpanValueCodec<T>`. See the Class Fields sample. |
+
+`MaskedValue<T>`, `MaskedString`, and `MaskedData<T>` do not provide integrity detection. Use `GuardedValue<T>` for unmanaged values whose corruption should trigger a response.
+
+## Read, write, and calculate
+
+```csharp
+using Achieve.MaskedValues;
+
+GuardedValue<int> health = 100;
+health -= 10;
+health += 5;
+health *= 2;
+health /= 2;
+int currentHealth = health;       // Implicit read, with integrity validation.
+health.Value = 80;                // Explicit write, also validated.
+bool isAlive = health > 0;
+```
+
+Numeric wrappers also support `%`, `%=`, unary signs, and `++`/`--`. Results retain the wrapper type: `var result = health + 10` is a `GuardedValue<int>`. Use `int result = health + 10` or `health.Value + 10` for a plain number.
+
+Integer addition, subtraction, and multiplication wrap on overflow, including inside a caller's `checked` block. Use `.Value` when you need the underlying type's own arithmetic rules or custom struct operations.
+
+`GuardedValue<T>.RefreshMask()` changes the masked representation while keeping the value. Call it explicitly when needed; reads already validate integrity.
+
+See the [Inspector guide](/guide/inspector) for field setup and [tampering guide](/guide/tampering) for failure handling.

@@ -1,0 +1,11 @@
+{
+  "name": "masked-value-docs",
+  "private": true,
+  "scripts": {
+    "build": "rspress build",
+    "dev": "rspress dev"
+  },
+  "devDependencies": {
+    "@rspress/core": "^2.0.0"
+  }
+}

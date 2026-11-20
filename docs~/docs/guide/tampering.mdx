@@ -1,0 +1,13 @@
+# Tampering
+
+`GuardedValue<T>` refuses to return or overwrite a value when its integrity check fails. `.Value` and `RefreshMask()` throw `InvalidOperationException`; `TryGetValue`, `TrySetValue`, `CheckIntegrity`, and `TryRefreshMask` return `false`. Stop the current game action on failure and do not use failed output as valid state.
+
+## Respond to detection
+
+Subscribe to `GuardedValueDiagnostics.TamperingDetected` to respond. It reports the value type on the checking thread, **when the next check fails**, rather than at the exact external memory write. An unused value is not checked automatically; call `CheckIntegrity()` at a suitable interval for important values you do not otherwise access.
+
+The package does not shut down the game automatically. To stop gameplay and request shutdown once on the main thread, connect the [ready-to-use Unity listener](https://github.com/achieveonepark/masked-value/blob/main/Documentation~/Tampering.md#unity-listener-quit-on-detection). It signals a thread-safe flag; in the Editor it stops Play mode. Follow the [full tampering guide](https://github.com/achieveonepark/masked-value/blob/main/Documentation~/Tampering.md) for lifecycle and failure-handling details.
+
+## Protection limits
+
+Masking and lightweight integrity checks are not encryption or complete anti-cheat protection. Code patches, valid snapshot replay, and legitimate API writes remain possible. Keep authoritative online game state on the server.
